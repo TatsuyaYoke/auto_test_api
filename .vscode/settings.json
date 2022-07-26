@@ -1,0 +1,27 @@
+{
+    "editor.formatOnSave": true,
+    "python.analysis.extraPaths": ["./src"],
+    "python.defaultInterpreterPath": "C:/Users/81809/src/git/sat_auto/sat_auto_test_api/.venv/Scripts/python.exe",
+    "python.formatting.provider": "black",
+    "python.formatting.blackPath": "C:/Users/81809/src/git/sat_auto/sat_auto_test_api/.venv/Scripts/black.exe",
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Path": "C:/Users/81809/src/git/sat_auto/sat_auto_test_api/.venv/Scripts/pflake8.exe",
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyPath": "C:/Users/81809/src/git/sat_auto/sat_auto_test_api/.venv/Scripts/mypy.exe",
+    "python.linting.mypyArgs": [
+        "--ignore-missing-imports"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
+    "autoDocstring.docstringFormat": "numpy",
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportUnknownMemberType":"none",
+        "reportUnknownVariableType":"none",
+        "reportMissingTypeStubs": "none",
+        "reportUnboundVariable": "warning"
+    }
+}

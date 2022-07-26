@@ -1,0 +1,32 @@
+{
+    "gl840": {
+        "visa": {
+            "ip_address": "192.168.1.5",
+            "port": 8023
+        }
+    },
+    "sas": {
+        "serial": {
+            "port": "COM1",
+            "baudrate": 57600,
+            "parity": "E"
+        },
+        "output": {
+            "voc": 80,
+            "isc": 4,
+            "fill_factor": 0.9
+        },
+        "repeat": {
+            "orbit_period": 10,
+            "sun_rate": 0.6,
+            "offset": 0
+        }
+    },
+    "bus": {
+        "serial": {
+            "port": "COM5",
+            "baudrate": 9600,
+            "parity": "N"
+        }
+    }
+}
