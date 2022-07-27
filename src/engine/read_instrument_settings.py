@@ -16,9 +16,13 @@ else:
 P_SETTING = p_top / ".settings/settings.json"
 
 
-class VisaSetting(BaseModel):
+class NetworkSetting(BaseModel):
     ip_address: str
     port: int
+
+
+class VisaSetting(NetworkSetting):
+    pass
 
 
 class Gl840Setting(BaseModel):
@@ -54,10 +58,20 @@ class BusJigSetting(BaseModel):
     serial: SerialSetting
 
 
+class QmrSetting(BaseModel):
+    network: NetworkSetting
+
+
+class QdraSetting(BaseModel):
+    network: NetworkSetting
+
+
 class InstrumentSetting(BaseModel):
     gl840: Gl840Setting
     sas: SasSetting
     bus: BusJigSetting
+    qmr: QmrSetting
+    qdra: QdraSetting
 
 
 def read_json_file() -> Optional[InstrumentSetting]:

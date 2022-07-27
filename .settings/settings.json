@@ -28,5 +28,17 @@
             "baudrate": 9600,
             "parity": "N"
         }
+    },
+    "qmr": {
+        "network": {
+            "ip_address": "192.168.12.4",
+            "port": 80
+        }
+    },
+    "qdra": {
+        "network": {
+            "ip_address": "192.168.12.5",
+            "port": 8081
+        }
     }
 }
