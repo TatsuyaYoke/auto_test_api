@@ -64,7 +64,7 @@ class SerialDriver:
                 self.__is_connection_error = True
                 logger.error("Serial write timeout!")
 
-    def send_ascii(self, data: str) -> None:
+    def send_ascii(self, data: str, termination: str = "\r\n") -> None:
         if self.__ser is None:
             self.__is_connection_error = False
             logger.error("Serial is None!")
@@ -73,7 +73,7 @@ class SerialDriver:
                 if self.__ser.out_waiting == 0:
                     break
             try:
-                self.__ser.write(data.encode())
+                self.__ser.write((data + termination).encode())
                 self.__is_connection_error = False
                 self.__ser.flush()
             except SerialTimeoutException:
