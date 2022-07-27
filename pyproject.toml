@@ -47,7 +47,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.taskipy.tasks]
-dev = "uvicorn src.main:app --reload"
+dev = "uvicorn src.main:app --reload --port 8001"
 fmt-lint = "task fmt && task lint"
 fmt-lint-strictest = "task fmt && task lint-strictest"
 fmt = "task fmt-black && task fmt-isort"
