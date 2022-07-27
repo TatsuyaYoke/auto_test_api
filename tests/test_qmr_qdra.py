@@ -1,3 +1,4 @@
+from engine.qdra import record_start, record_stop
 from engine.qmr import change_modcod
 from engine.read_instrument_settings import read_json_file
 
@@ -29,3 +30,14 @@ def test_qmr():
     ip_address = QMR_SETTING.network.ip_address
     port = QMR_SETTING.network.port
     assert change_modcod(ip_address=ip_address, port=port, modcod=13) == -1
+
+
+def test_qdra():
+
+    ip_address = QDRA_SETTING.network.ip_address
+    port = QDRA_SETTING.network.port
+    session_name = "dummy"
+    session_desc = ""
+    duration = 10
+    assert record_start(ip_address=ip_address, port=port, session_name=session_name, session_desc=session_desc, duration=duration) == -1
+    assert record_stop(ip_address=ip_address, port=port) == -1
