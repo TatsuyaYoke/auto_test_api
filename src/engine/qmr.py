@@ -1,14 +1,16 @@
 import json
+from typing import Literal
 
 import requests
 
+ModcodType = Literal[13, 15]
 
-def qmr_modcod_change_data(ip: str, port: str, modcod: int):
 
-    print("qMR modcod change")
+def change_modcod(ip_address: str, port: int, modcod: ModcodType, timeout: int = 1) -> int:
+
     endpoint = "rest/demodulatorWb1/_attribute/dvbs2ModCodExpected"
     headers = {"Content-Type": "application/json"}
-    url = f"http://{ip}:{port}/{endpoint}"
+    url = f"http://{ip_address}:{port}/{endpoint}"
 
     payload = {
         "dvbs2ModCodExpected": {
@@ -21,12 +23,9 @@ def qmr_modcod_change_data(ip: str, port: str, modcod: int):
         payload["dvbs2ModCodExpected"]["value"] = "8PSK 2/3"
     elif modcod == 15:
         payload["dvbs2ModCodExpected"]["value"] = "8PSK 5/6"
-    else:
-        print("modcod setting error")
-        return
 
     try:
-        request_post = requests.post(url=url, data=json.dumps(payload), headers=headers, timeout=5)
-        print(request_post.status_code)
+        request_post = requests.post(url=url, data=json.dumps(payload), headers=headers, timeout=timeout)
+        return request_post.status_code
     except requests.exceptions.ConnectTimeout:
-        print("Timeout Error")
+        return -1

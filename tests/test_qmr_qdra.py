@@ -1,3 +1,4 @@
+from engine.qmr import change_modcod
 from engine.read_instrument_settings import read_json_file
 
 SETTING = read_json_file()
@@ -21,3 +22,10 @@ def test_read_json_file():
         assert QDRA_SETTING.network.port == 8081
 
     assert QDRA_SETTING is not None
+
+
+def test_qmr():
+
+    ip_address = QMR_SETTING.network.ip_address
+    port = QMR_SETTING.network.port
+    assert change_modcod(ip_address=ip_address, port=port, modcod=13) == -1
