@@ -6,10 +6,10 @@ from typing import Optional, cast
 import serial
 from serial.serialutil import SerialTimeoutException
 
-import common.settings
-from common.logger import set_logger
+import src.common.settings
+from src.common.logger import set_logger
 
-LOGGER_IS_ACTIVE_STREAM = common.settings.logger_is_active_stream
+LOGGER_IS_ACTIVE_STREAM = src.common.settings.logger_is_active_stream
 logger = set_logger(__name__, is_active_stream=LOGGER_IS_ACTIVE_STREAM)
 
 

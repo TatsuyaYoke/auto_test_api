@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from common.serial_driver import SerialDriver
+from src.common.serial_driver import SerialDriver
 
 
 class BusJigSerial(SerialDriver):
