@@ -233,7 +233,7 @@ class SasSerial(SerialDriver):
                                 binary_chunk[SAS_DATA_POSITION["CH1"]["current"]["start"] * 2 : (SAS_DATA_POSITION["CH1"]["current"]["end"] + 1) * 2],
                                 16,
                             )
-                            / 10
+                            / 100
                         )
 
         data: SasDataDict = {"time": int(time.time()), "voltage": voltage, "current": current}
