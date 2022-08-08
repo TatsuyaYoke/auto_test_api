@@ -32,6 +32,7 @@ class VisaSetting(NetworkSetting):
 
 class Gl840Setting(BaseModel):
     visa: VisaSetting
+    ftp: NetworkSetting
 
 
 class SerialSetting(BaseModel):

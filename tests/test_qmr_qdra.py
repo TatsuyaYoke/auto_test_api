@@ -61,15 +61,14 @@ def test_qdra_get_file():
     username = QDRA_SETTING.ssh.username
     password = QDRA_SETTING.ssh.password
 
-    if port is not None and username is not None and password is not None:
-        qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
+    qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
 
-        p_server = Path("12TB/dsx0201_final/0801_24hs_6_Ocean2/waveform_and_spectrum_cal.png")
-        p_save = Path("out.png")
+    p_server = Path("12TB/dsx0201_final/0801_24hs_6_Ocean2/waveform_and_spectrum_cal.png")
+    p_save = Path("out.png")
 
-        qdra_ssh.get_file(p_server=p_server, p_save=p_save)
-        assert p_save.exists()
-        p_save.unlink(missing_ok=True)
+    qdra_ssh.get_file(p_server=p_server, p_save=p_save)
+    assert p_save.exists()
+    p_save.unlink(missing_ok=True)
 
 
 @pytest.mark.skip()
@@ -80,16 +79,15 @@ def test_qdra_exec_sh():
     username = QDRA_SETTING.ssh.username
     password = QDRA_SETTING.ssh.password
 
-    if port is not None and username is not None and password is not None:
-        qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
+    qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
 
-        path = Path("12TB/dsx0201_final")
-        sh_name = "data_processing_v4.sh"
-        session_name = "0726_case8_6_closed"
-        stdout, stderr = qdra_ssh.exec_sh(path=path, sh_name=sh_name, session_name=session_name)
-        for out in stdout:
-            print(out, end="")
-        for out in stderr:
-            print(out, end="")
-        list_dir = qdra_ssh.get_list_dir(path / session_name)
-        assert len(list_dir) > 0
+    path = Path("12TB/dsx0201_final")
+    sh_name = "data_processing_v4.sh"
+    session_name = "0726_case8_6_closed"
+    stdout, stderr = qdra_ssh.exec_sh(path=path, sh_name=sh_name, session_name=session_name)
+    for out in stdout:
+        print(out, end="")
+    for out in stderr:
+        print(out, end="")
+    list_dir = qdra_ssh.get_list_dir(path / session_name)
+    assert len(list_dir) > 0

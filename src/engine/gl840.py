@@ -1,4 +1,8 @@
+from __future__ import annotations
+
+import ftplib
 import re
+from pathlib import Path
 from typing import Literal, Optional
 
 from src.common.logger import set_logger
@@ -124,3 +128,26 @@ class Gl840Visa(VisaDriver):
         inst = super().get_inst()
         if inst is not None:
             inst.write(f":DATA:SAMP {sampling}")
+
+
+class Gl840Ftp:
+    def __init__(self, host: str, port: int) -> None:
+        self.host = host
+        self.port = port
+
+    def get_list_dir(self, path: Path) -> list[str]:
+
+        with ftplib.FTP() as ftp:
+            ftp.connect(host=self.host, port=self.port)
+            ftp.login()
+            file_list = ftp.nlst(str(path).replace("\\", "/"))
+            return list(filter(lambda x: x != "", file_list))
+
+    def get_file(self, p_server: Path, p_save: Path) -> None:
+
+        with ftplib.FTP() as ftp:
+            ftp.connect(host=self.host, port=self.port)
+            ftp.login()
+            with open(p_save, "wb") as f:
+                p_server_str = str(p_server).replace("\\", "/")
+                ftp.retrbinary(f"RETR {p_server_str}", f.write)
