@@ -19,9 +19,11 @@ P_SETTING = p_top / ".settings/settings.json"
 class NetworkSetting(BaseModel):
     ip_address: str
     port: int
-    ssh_port: Optional[int]
-    username: Optional[str]
-    password: Optional[str]
+
+
+class SshSetting(NetworkSetting):
+    username: str
+    password: str
 
 
 class VisaSetting(NetworkSetting):
@@ -67,6 +69,7 @@ class QmrSetting(BaseModel):
 
 class QdraSetting(BaseModel):
     network: NetworkSetting
+    ssh: SshSetting
 
 
 class InstrumentSetting(BaseModel):

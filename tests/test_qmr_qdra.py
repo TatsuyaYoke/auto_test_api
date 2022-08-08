@@ -18,8 +18,6 @@ def test_read_json_file():
         print(QMR_SETTING)
         assert QMR_SETTING.network.ip_address == "192.168.12.4"
         assert QMR_SETTING.network.port == 80
-        assert QMR_SETTING.network.username == "rtlogic"
-        assert QMR_SETTING.network.password == "strix"
 
     assert QMR_SETTING is not None
 
@@ -27,9 +25,10 @@ def test_read_json_file():
         print(QDRA_SETTING)
         assert QDRA_SETTING.network.ip_address == "192.168.12.5"
         assert QDRA_SETTING.network.port == 8081
-        assert QDRA_SETTING.network.ssh_port == 22
-        assert QDRA_SETTING.network.username == "synspective"
-        assert QDRA_SETTING.network.password == "strix"
+        assert QDRA_SETTING.ssh.ip_address == "192.168.12.5"
+        assert QDRA_SETTING.ssh.port == 22
+        assert QDRA_SETTING.ssh.username == "synspective"
+        assert QDRA_SETTING.ssh.password == "strix"
 
     assert QDRA_SETTING is not None
 
@@ -54,12 +53,13 @@ def test_qdra():
     assert record_stop(ip_address=ip_address, port=port) == -1
 
 
+@pytest.mark.skip()
 def test_qdra_get_file():
 
-    ip_address = QDRA_SETTING.network.ip_address
-    port = QDRA_SETTING.network.ssh_port
-    username = QDRA_SETTING.network.username
-    password = QDRA_SETTING.network.password
+    ip_address = QDRA_SETTING.ssh.ip_address
+    port = QDRA_SETTING.ssh.port
+    username = QDRA_SETTING.ssh.username
+    password = QDRA_SETTING.ssh.password
 
     if port is not None and username is not None and password is not None:
         qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
@@ -72,12 +72,13 @@ def test_qdra_get_file():
         p_save.unlink(missing_ok=True)
 
 
+@pytest.mark.skip()
 def test_qdra_exec_sh():
 
-    ip_address = QDRA_SETTING.network.ip_address
-    port = QDRA_SETTING.network.ssh_port
-    username = QDRA_SETTING.network.username
-    password = QDRA_SETTING.network.password
+    ip_address = QDRA_SETTING.ssh.ip_address
+    port = QDRA_SETTING.ssh.port
+    username = QDRA_SETTING.ssh.username
+    password = QDRA_SETTING.ssh.password
 
     if port is not None and username is not None and password is not None:
         qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
