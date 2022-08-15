@@ -26,12 +26,8 @@ class SshSetting(NetworkSetting):
     password: str
 
 
-class VisaSetting(NetworkSetting):
-    pass
-
-
 class Gl840Setting(BaseModel):
-    visa: VisaSetting
+    visa: str
     ftp: NetworkSetting
 
 
@@ -73,12 +69,23 @@ class QdraSetting(BaseModel):
     ssh: SshSetting
 
 
+class PowerSensorSetting(BaseModel):
+    visa: str
+
+
+class SignalAnalyzerSetting(BaseModel):
+    visa: str
+    capture_path: str
+
+
 class InstrumentSetting(BaseModel):
     gl840: Gl840Setting
     sas: SasSetting
     bus: BusJigSetting
     qmr: QmrSetting
     qdra: QdraSetting
+    power_sensor: PowerSensorSetting
+    signal_analyzer: SignalAnalyzerSetting
 
 
 def read_json_file() -> Optional[InstrumentSetting]:

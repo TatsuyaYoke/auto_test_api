@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
+from typing import Optional, cast
 
 from pyvisa.highlevel import ResourceManager
 from pyvisa.resources.tcpip import TCPIPSocket
@@ -13,7 +13,7 @@ class VisaDriver:
         self.__inst: Optional[TCPIPSocket] = None
         self.__is_open = False
 
-    def set_resource(self, address: str, idn_pattern: str, read_termination: str = "\r\n", write_termination: str = "\r\n") -> bool:  # FIXME
+    def set_resource(self, address: str, idn_pattern: str, read_termination: str = "\r\n", write_termination: str = "\r\n") -> bool:
         self.__rm = ResourceManager()
         self.__inst = TCPIPSocket(resource_manager=self.__rm, resource_name=address)
         self.__inst.open()
@@ -47,3 +47,20 @@ class VisaDriver:
 
     def get_open_status(self) -> bool:
         return self.__is_open
+
+    def write(self, data: str) -> None:
+        if self.__inst is not None:
+            self.__inst.write(data)
+
+    def query(self, data: str) -> Optional[str]:
+        if self.__inst is not None:
+            return self.__inst.query(data)
+        else:
+            return None
+
+    def query_binary_values(self, data: str) -> Optional[list[int | float]]:
+        if self.__inst is not None:
+            response = self.__inst.query_binary_values(message=data, datatype="s")
+            return cast("list[int | float]", response)
+        else:
+            return None

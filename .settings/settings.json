@@ -1,9 +1,6 @@
 {
     "gl840": {
-        "visa": {
-            "ip_address": "192.168.1.5",
-            "port": 8023
-        },
+        "visa": "TCPIP0::192.168.1.5::8023::SOCKET",
         "ftp": {
             "ip_address": "192.168.1.5",
             "port": 21
@@ -50,5 +47,12 @@
             "username": "synspective",
             "password": "strix"
         }
+    },
+    "power_sensor": {
+        "visa": "USB0::0x2A8D::0x2C18::MY61450004::0::INSTR"
+    },
+    "signal_analyzer": {
+        "visa": "TCPIP0::192.168.3.240::inst0::INSTR",
+        "capture_path": "D:/Users/Instrument/Documents/SA/screen"
     }
 }

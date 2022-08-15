@@ -6,19 +6,18 @@ import pytest
 from engine.gl840 import Gl840Ftp, Gl840Visa
 from engine.read_instrument_settings import read_json_file
 
-is_release = True
-GL840_VISA = Gl840Visa()
+is_release = False
 SETTING = read_json_file()
 if SETTING is not None:
     GL840_SETTING = SETTING.gl840
+    GL840_VISA = Gl840Visa(GL840_SETTING.visa)
 
 
 def test_read_json_file():
 
     if GL840_SETTING is not None:
         print(GL840_SETTING)
-        assert GL840_SETTING.visa.ip_address == "192.168.1.5"
-        assert GL840_SETTING.visa.port == 8023
+        assert GL840_SETTING.visa == "TCPIP0::192.168.1.5::8023::SOCKET"
         assert GL840_SETTING.ftp.ip_address == "192.168.1.5"
         assert GL840_SETTING.ftp.port == 21
 
@@ -29,8 +28,7 @@ def test_read_json_file():
 def test_connect():
 
     if GL840_SETTING is not None:
-        visa_setting = GL840_SETTING.visa
-        assert GL840_VISA.connect(visa_setting)
+        assert GL840_VISA.connect()
 
 
 @pytest.mark.skipif(is_release, reason="released")
@@ -90,7 +88,6 @@ def test_ftp_get_list_dir():
     gl840_ftp = Gl840Ftp(host=ip_address, port=port)
     path = Path("SD2")
     list_dir = gl840_ftp.get_list_dir(path=path)
-    print(list_dir)
     assert len(list_dir) > 0
 
 

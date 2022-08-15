@@ -10,16 +10,10 @@ import src.routers.trans
 app = FastAPI()
 
 origins = [
-  "http://localhost:3000",
+    "http://localhost:3000",
 ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 app.include_router(src.routers.bus.router, prefix="/bus", tags=["bus"])
 app.include_router(src.routers.obs.router, prefix="/obs", tags=["obs"])

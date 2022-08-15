@@ -7,7 +7,6 @@ from typing import Literal, Optional
 
 from src.common.logger import set_logger
 from src.common.visa_driver import VisaDriver
-from src.engine.read_instrument_settings import VisaSetting
 
 logger = set_logger(__name__)
 
@@ -41,14 +40,14 @@ SamplingType = Literal[
 
 
 class Gl840Visa(VisaDriver):
-    def __init__(self) -> None:
+    def __init__(self, address: str) -> None:
         super().__init__()
         self.__is_recording = False
+        self.address = address
 
-    def connect(self, visa_setting: VisaSetting) -> bool:
+    def connect(self) -> bool:
 
-        visa_address = f"TCPIP0::{visa_setting.ip_address}::{visa_setting.port}::SOCKET"
-        return super().set_resource(address=visa_address, idn_pattern=IDN_PATTERN)
+        return super().set_resource(address=self.address, idn_pattern=IDN_PATTERN)
 
     def record_start(self) -> bool:
 
