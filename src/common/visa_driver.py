@@ -21,7 +21,7 @@ class VisaDriver:
         self.__inst.write_termination = write_termination
         self.__inst.timeout = 10000  # ms
 
-        idn_response = self.__inst.query("*IDN?")
+        idn_response = self.__inst.query("*IDN?").strip()
         regex_pattern = re.compile(idn_pattern)
 
         if idn_response is not None:

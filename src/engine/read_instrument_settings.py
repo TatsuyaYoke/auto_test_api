@@ -16,6 +16,10 @@ else:
 P_SETTING = p_top / ".settings/settings.json"
 
 
+class CommonSetting(BaseModel):
+    default_path: str
+
+
 class NetworkSetting(BaseModel):
     ip_address: str
     port: int
@@ -79,6 +83,7 @@ class SignalAnalyzerSetting(BaseModel):
 
 
 class InstrumentSetting(BaseModel):
+    common: CommonSetting
     gl840: Gl840Setting
     sas: SasSetting
     bus: BusJigSetting

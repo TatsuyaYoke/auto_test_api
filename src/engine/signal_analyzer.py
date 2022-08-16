@@ -3,10 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal, Optional, TypedDict
 
-from common.general import get_now_string, get_today_string
-from common.visa_driver import VisaDriver
+from src.common.general import get_now_string, get_today_string
+from src.common.visa_driver import VisaDriver
 
-SIGNAL_ANALYZER_IDN_PATTERN = r"Keysight Technologies,N90([0-9]{2})(A|B),MY([0-9]+),A([0-9]*).([0-9]{2}).([0-9]{2})\n"
+SIGNAL_ANALYZER_IDN_PATTERN = "Keysight Technologies,N90([0-9]{2})(A|B),MY([0-9]+),A([0-9]*).([0-9]{2}).([0-9]{2})"
 
 TraceNum = Literal[1, 2, 3, 4]
 

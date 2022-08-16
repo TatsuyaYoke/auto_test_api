@@ -1,8 +1,8 @@
 from typing import Optional
 
-from common.visa_driver import VisaDriver
+from src.common.visa_driver import VisaDriver
 
-POWER_SENSOR_IDN_PATTERN = r"Keysight Technologies,U([0-9]{4})X*(A|B),MY([0-9]+),A([0-9]*).([0-9]{2}).([0-9]{2})\n"
+POWER_SENSOR_IDN_PATTERN = "Keysight Technologies,U([0-9]{4})X*(A|B),MY([0-9]+),A([0-9]*).([0-9]{2}).([0-9]{2})"
 
 
 class PowerSensor(VisaDriver):

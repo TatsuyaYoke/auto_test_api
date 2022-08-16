@@ -3,7 +3,7 @@ from __future__ import annotations
 import struct
 from datetime import datetime as dt
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas
 
@@ -30,3 +30,29 @@ def get_today_string() -> str:
     today = dt.now()
     today_str = today.strftime("%Y%m%d")
     return today_str
+
+
+def resolve_path_jp_en(path: str | Path, resolve_path_name1: str, resolve_path_name2: str) -> Optional[Path]:
+
+    path_str = str(path)
+
+    if resolve_path_name1 in path_str:
+        if Path(path_str).exists():
+            return Path(path_str)
+        else:
+            path_str = path_str.replace(resolve_path_name1, resolve_path_name2)
+            if Path(path_str).exists():
+                return Path(path_str)
+            else:
+                return None
+    elif resolve_path_name2 in path_str:
+        if Path(path_str).exists():
+            return Path(path_str)
+        else:
+            path_str = path_str.replace(resolve_path_name2, resolve_path_name1)
+            if Path(path_str).exists():
+                return Path(path_str)
+            else:
+                return None
+    else:
+        return None
