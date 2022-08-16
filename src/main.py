@@ -17,6 +17,10 @@ app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True
 
 app.include_router(src.routers.bus.router, prefix="/bus", tags=["bus"])
 app.include_router(src.routers.obs.router, prefix="/obs", tags=["obs"])
+app.include_router(src.routers.obs.router_common, prefix="/obs/common", tags=["obs"])
+app.include_router(src.routers.obs.router_power_sensor, prefix="/obs/power_sensor", tags=["obs"])
+app.include_router(src.routers.obs.router_signal_analyzer, prefix="/obs/signal_analyzer", tags=["obs"])
+app.include_router(src.routers.obs.router_test, prefix="/obs/test", tags=["obs"])
 app.include_router(src.routers.trans.router, prefix="/trans", tags=["trans"])
 
 

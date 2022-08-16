@@ -56,3 +56,8 @@ def resolve_path_jp_en(path: str | Path, resolve_path_name1: str, resolve_path_n
                 return None
     else:
         return None
+
+
+def resolve_path_shared_drives(path: str | Path) -> Optional[Path]:
+
+    return resolve_path_jp_en(path, "共有ドライブ", "Shared drives")
