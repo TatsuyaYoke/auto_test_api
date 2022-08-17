@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, Optional
 
 import pandas
+from pythonping import ping
+from pythonping.executor import ResponseList
 
 
 def save_csv_from_dict(data: dict[Any, Any], path: Path) -> None:
@@ -61,3 +63,15 @@ def resolve_path_jp_en(path: str | Path, resolve_path_name1: str, resolve_path_n
 def resolve_path_shared_drives(path: str | Path) -> Optional[Path]:
 
     return resolve_path_jp_en(path, "共有ドライブ", "Shared drives")
+
+
+def check_ping(ip_address: str) -> bool:
+    is_ok = False
+    response: ResponseList = ping(ip_address, timeout=0.1, count=2)  # type: ignore
+    response_list = response.__iter__()
+    for r in response_list:
+        if "Reply from" in str(r):  # type: ignore
+            is_ok = True
+            break
+
+    return is_ok

@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import pytest
-
 from engine.qdra import QdraSsh, record_start, record_stop
 from engine.qmr import change_modcod
 from engine.read_instrument_settings import read_json_file
@@ -33,15 +31,13 @@ def test_read_json_file():
     assert QDRA_SETTING is not None
 
 
-@pytest.mark.skip()
 def test_qmr():
 
     ip_address = QMR_SETTING.network.ip_address
     port = QMR_SETTING.network.port
-    assert change_modcod(ip_address=ip_address, port=port, modcod=13) == -1
+    assert change_modcod(ip_address=ip_address, port=port, modcod=15) == 200
 
 
-@pytest.mark.skip()
 def test_qdra():
 
     ip_address = QDRA_SETTING.network.ip_address
@@ -49,11 +45,10 @@ def test_qdra():
     session_name = "dummy"
     session_desc = ""
     duration = 10
-    assert record_start(ip_address=ip_address, port=port, session_name=session_name, session_desc=session_desc, duration=duration) == -1
-    assert record_stop(ip_address=ip_address, port=port) == -1
+    assert record_start(ip_address=ip_address, port=port, session_name=session_name, session_desc=session_desc, duration=duration) == 200
+    assert record_stop(ip_address=ip_address, port=port) == 200
 
 
-@pytest.mark.skip()
 def test_qdra_get_file():
 
     ip_address = QDRA_SETTING.ssh.ip_address
@@ -71,7 +66,6 @@ def test_qdra_get_file():
     p_save.unlink(missing_ok=True)
 
 
-@pytest.mark.skip()
 def test_qdra_exec_sh():
 
     ip_address = QDRA_SETTING.ssh.ip_address

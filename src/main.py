@@ -22,6 +22,10 @@ app.include_router(src.routers.obs.router_power_sensor, prefix="/obs/power_senso
 app.include_router(src.routers.obs.router_signal_analyzer, prefix="/obs/signal_analyzer", tags=["obs"])
 app.include_router(src.routers.obs.router_test, prefix="/obs/test", tags=["obs"])
 app.include_router(src.routers.trans.router, prefix="/trans", tags=["trans"])
+app.include_router(src.routers.trans.router_common, prefix="/trans/common", tags=["trans"])
+app.include_router(src.routers.trans.router_qdra, prefix="/trans/qdra", tags=["trans"])
+app.include_router(src.routers.trans.router_qmr, prefix="/trans/qmr", tags=["trans"])
+app.include_router(src.routers.trans.router_test, prefix="/trans/test", tags=["trans"])
 
 
 @app.get("/")
