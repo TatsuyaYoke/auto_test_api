@@ -107,6 +107,26 @@ async def qdra_record_stop() -> dict[str, bool]:
     return {"success": trans_test.record_stop()}
 
 
+@router_qdra.get("/checkExistence")
+async def qdra_check_existence(path_str: str) -> dict[str, bool | str]:
+    ip_address = trans_test.qdra_setting.ip_address
+    if not check_ping(ip_address):
+        return {"success": False, "errorMessage": "Not open: qDRA"}
+    exists = trans_test.qdra_ssh.exists(Path(path_str))
+    if exists:
+        return {"success": True}
+    else:
+        return {"success": False, "errorMessage": f"Not exist: {path_str}"}
+
+
+@router_qdra.get("/makeDir")
+async def qdra_make_dir(path_str: str) -> dict[str, bool | str]:
+    ip_address = trans_test.qdra_setting.ip_address
+    if not check_ping(ip_address):
+        return {"success": False, "errorMessage": "Not open: qDRA"}
+    return {"success": trans_test.qdra_ssh.mkdir(Path(path_str))}
+
+
 @router_qmr.get("/connect")
 async def connect_qmr() -> dict[str, bool]:
     ip_address = trans_test.qmr_setting.ip_address
@@ -121,3 +141,19 @@ async def qmr_change_modcod_8psk_2_3() -> dict[str, bool]:
 @router_qmr.get("/8psk_5_6")
 async def qmr_change_modcod_8psk_5_6() -> dict[str, bool]:
     return {"success": trans_test.change_modcod(modcod=15)}
+
+
+@router_test.get("/processing")
+async def processing(path_str: str, p_script_str: str) -> dict[str, bool | str]:
+    ip_address = trans_test.qdra_setting.ip_address
+    if not check_ping(ip_address):
+        return {"success": False, "errorMessage": "Not open: qDRA"}
+    return {"success": True}
+
+
+@router_test.get("/getProcessingData")
+async def get_processing_data(p_remote_str: str, p_local_str: str) -> dict[str, bool | str]:
+    ip_address = trans_test.qdra_setting.ip_address
+    if not check_ping(ip_address):
+        return {"success": False, "errorMessage": "Not open: qDRA"}
+    return {"success": True}
