@@ -1,6 +1,8 @@
 from pathlib import Path
-
 from uuid import uuid4
+
+import pytest
+
 from engine.qdra import QdraSsh, record_start, record_stop
 from engine.qmr import change_modcod
 from engine.read_instrument_settings import read_json_file
@@ -39,6 +41,7 @@ def test_qmr():
     assert change_modcod(ip_address=ip_address, port=port, modcod=15) == 200
 
 
+@pytest.mark.skip()
 def test_qdra():
 
     ip_address = QDRA_SETTING.network.ip_address
@@ -86,3 +89,31 @@ def test_qdra_exec_sh():
         print(out, end="")
     list_dir = qdra_ssh.get_list_dir(path / session_name)
     assert len(list_dir) > 0
+
+
+def test_qdra_exists():
+
+    ip_address = QDRA_SETTING.ssh.ip_address
+    port = QDRA_SETTING.ssh.port
+    username = QDRA_SETTING.ssh.username
+    password = QDRA_SETTING.ssh.password
+
+    qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
+    assert qdra_ssh.exists(Path("12TB"))
+    assert not qdra_ssh.exists(Path("11TB"))
+    assert qdra_ssh.exists(Path("12TB/dsx0201_final"))
+    assert not qdra_ssh.exists(Path("12TB/sx0201_final"))
+    assert qdra_ssh.exists(Path("12TB/dsx0201_final/data_processing_v4.sh"))
+    assert not qdra_ssh.exists(Path("12TB/dsx0201_final/data.sh"))
+
+
+def test_qdra_mkdir():
+
+    ip_address = QDRA_SETTING.ssh.ip_address
+    port = QDRA_SETTING.ssh.port
+    username = QDRA_SETTING.ssh.username
+    password = QDRA_SETTING.ssh.password
+
+    qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
+    assert qdra_ssh.mkdir(Path("12TB/dsx0201_final/testDummy"))
+    assert qdra_ssh.mkdir(Path("12TB/projectDummy/testDummy"))

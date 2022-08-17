@@ -83,3 +83,42 @@ class QdraSsh:
             list_dir = sftp.listdir(path=str(path).replace("\\", "/"))
 
         return list_dir
+
+    def exists(self, path: Path) -> bool:
+
+        with paramiko.SSHClient() as ssh:
+            # Are you sure you want to continue connecting (yes/no)? -> Yes
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.host, self.port, self.username, self.password)
+            sftp = ssh.open_sftp()
+            try:
+                sftp.stat(str(path).replace("\\", "/"))
+                return True
+            except FileNotFoundError:
+                return False
+
+    def mkdir(self, path: Path) -> bool:
+
+        with paramiko.SSHClient() as ssh:
+            # Are you sure you want to continue connecting (yes/no)? -> Yes
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.host, self.port, self.username, self.password)
+            sftp = ssh.open_sftp()
+
+            path_tmp = path
+            path_list: list[Path] = []
+            path_list.append(path)
+            path_depth = len(str(path).split("\\"))
+            for _ in range(path_depth - 1):
+                path_tmp = path_tmp.parent
+                path_list.append(path_tmp)
+
+            path_list.reverse()
+
+            for p in path_list:
+                try:
+                    sftp.stat(str(p).replace("\\", "/"))
+                except FileNotFoundError:
+                    sftp.mkdir(str(p).replace("\\", "/"))
+
+        return self.exists(path)
