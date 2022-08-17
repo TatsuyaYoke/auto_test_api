@@ -124,6 +124,12 @@ async def connect_power_sensor() -> dict[str, bool]:
     return {"isOpen": obs_test.power_sensor.connect()}
 
 
+@router_power_sensor.get("/disconnect")
+async def disconnect_power_sensor() -> dict[str, bool]:
+    obs_test.power_sensor.close_resource()
+    return {"isOpen": obs_test.power_sensor.get_open_status()}
+
+
 @router_power_sensor.get("/getData")
 async def get_data_power_sensor() -> dict[str, bool | str | float]:
     is_open = obs_test.power_sensor.get_open_status()
@@ -141,14 +147,21 @@ async def connect_signal_analyzer() -> dict[str, bool]:
     return {"isOpen": obs_test.signal_analyzer.connect()}
 
 
+@router_signal_analyzer.get("/disconnect")
+async def disconnect_signal_analyzer() -> dict[str, bool]:
+    obs_test.signal_analyzer.close_resource()
+    return {"isOpen": obs_test.signal_analyzer.get_open_status()}
+
+
 @router_signal_analyzer.get("/restart")
 async def restart_signal_analyzer() -> dict[str, bool | str]:
 
-    try:
-        obs_test.signal_analyzer.send_restart_command()
-        return {"success": True}
-    except Exception as error:
-        return {"success": False, "errorMessage": str(error)}
+    is_open = obs_test.signal_analyzer.get_open_status()
+    if not is_open:
+        return {"success": False, "errorMessage": "Not open: signal analyzer"}
+
+    obs_test.signal_analyzer.send_restart_command()
+    return {"success": True}
 
 
 @router_signal_analyzer.get("/getTrace")
@@ -156,7 +169,7 @@ async def get_trace_signal_analyzer() -> dict[str, bool | str | FreqResponse]:
 
     is_open = obs_test.signal_analyzer.get_open_status()
     if not is_open:
-        {"success": False, "errorMessage": "not open"}
+        return {"success": False, "errorMessage": "Not open: signal analyzer"}
     data = obs_test.signal_analyzer.get_data(trace_num=1)
     if data is None:
         return {"success": False, "errorMessage": "Data none"}
@@ -168,7 +181,7 @@ async def get_capture_signal_analyzer(picture_name: str) -> dict[str, bool | str
 
     is_open = obs_test.signal_analyzer.get_open_status()
     if not is_open:
-        {"success": False, "errorMessage": "not open"}
+        return {"success": False, "errorMessage": "Not open: signal analyzer"}
     data = obs_test.signal_analyzer.get_capture(picture_name="capture_test", deletes_picture=True)
     if data is None:
         return {"success": False, "errorMessage": "Data none"}
