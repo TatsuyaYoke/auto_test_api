@@ -21,7 +21,11 @@ def record_start(ip_address: str, port: int, session_name: str, session_desc: st
     }
     try:
         request_post = requests.post(url=url, data=json.dumps(payload), timeout=timeout)
-        return request_post.status_code
+        request = request_post.json()
+        if request["startRecordingResponse"]["value"]:
+            return request_post.status_code
+        else:
+            return -1
     except requests.exceptions.ConnectTimeout:
         return -1
 
