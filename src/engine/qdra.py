@@ -57,7 +57,7 @@ class QdraSsh:
             sftp = ssh.open_sftp()
             sftp.get(str(p_server).replace("\\", "/"), str(p_save))
 
-    def exec_sh(self, path: Path, sh_name: str, session_name: str) -> tuple[list[str], list[str]]:
+    def exec_sh(self, session_name: str, path: Path, p_script: Path) -> tuple[list[str], list[str]]:
 
         stdout_list: list[str] = []
         stderr_list: list[str] = []
@@ -66,7 +66,28 @@ class QdraSsh:
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(self.host, self.port, self.username, self.password)
             path_str = str(path).replace("\\", "/")
-            _, stdout, stderr = ssh.exec_command(f"cd {path_str} ; ./{sh_name} {session_name}")
+            p_script_str = str(p_script).replace("\\", "/")
+            stdin, stdout, stderr = ssh.exec_command(f"cd ~/{path_str} ; ~/{p_script_str} {session_name}", get_pty=True)
+            stdin.write(f"{self.password}\n")
+            stdin.flush()
+
+            stdout_list.extend(stdout)
+            stderr_list.extend(stderr)
+
+        return stdout_list, stderr_list
+
+    def delete_dir(self, path: Path) -> tuple[list[str], list[str]]:
+
+        stdout_list: list[str] = []
+        stderr_list: list[str] = []
+        with paramiko.SSHClient() as ssh:
+            # Are you sure you want to continue connecting (yes/no)? -> Yes
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.host, self.port, self.username, self.password)
+            path_str = str(path).replace("\\", "/")
+            stdin, stdout, stderr = ssh.exec_command(f"rm -r ~/{path_str}", get_pty=True)
+            stdin.write(f"{self.password}\n")
+            stdin.flush()
 
             stdout_list.extend(stdout)
             stderr_list.extend(stderr)

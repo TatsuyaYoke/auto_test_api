@@ -2,6 +2,10 @@
     "common": {
         "default_path": "G:/共有ドライブ/0705_Sat_Dev_Tlm/default"
     },
+    "trans": {
+        "ignore_file_extension": ["bin"],
+        "ignore_file": []
+    },
     "gl840": {
         "visa": "TCPIP0::192.168.1.5::8023::SOCKET",
         "ftp": {

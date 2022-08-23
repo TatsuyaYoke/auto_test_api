@@ -1,19 +1,27 @@
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 
 from fastapi import APIRouter
 
+import src.common.settings
+from src.common.decorator import exception
 from src.common.general import check_ping, get_today_string, resolve_path_shared_drives
+from src.common.logger import set_logger
 from src.engine.qdra import QdraSsh, record_start, record_stop
 from src.engine.qmr import ModcodType, change_modcod
 from src.engine.read_instrument_settings import InstrumentSetting, read_json_file
+
+LOGGER_IS_ACTIVE_STREAM = src.common.settings.logger_is_active_stream
+logger = set_logger(__name__, is_active_stream=LOGGER_IS_ACTIVE_STREAM)
 
 
 class TransTest:
     def __init__(self, settings: InstrumentSetting) -> None:
         self.__is_busy = False
         self.p_save = resolve_path_shared_drives(Path(settings.common.default_path))
+        self.trans_setting = settings.trans
         self.qdra_setting = settings.qdra.network
         self.qmr_setting = settings.qmr.network
 
@@ -62,6 +70,26 @@ class TransTest:
         else:
             return False
 
+    def processing(self, session_name: str, path_str: str, p_script_str: str) -> None:
+        self.set_busy()
+        self.qdra_ssh.exec_sh(session_name=session_name, path=Path(path_str), p_script=Path(p_script_str))
+        self.set_not_busy()
+
+    def get_processing_data(self, session_name: str, path_str: str) -> None:
+        self.set_busy()
+        path = Path(path_str)
+        p_from = path / session_name
+        file_list = self.qdra_ssh.get_list_dir(path=p_from)
+
+        if self.p_save is not None:
+            p_to = self.p_save / session_name
+            if not p_to.exists():
+                p_to.mkdir(parents=True)
+            for f in file_list:
+                self.qdra_ssh.get_file(p_server=p_from / f, p_save=p_to / f)
+
+        self.set_not_busy()
+
 
 settings = read_json_file()
 if settings is not None:
@@ -81,14 +109,18 @@ async def obs_hello() -> dict[str, str]:
 
 @router_common.get("/makeDir")
 async def make_dir(path_str: str) -> dict[str, bool | str]:
-    path = resolve_path_shared_drives(Path(path_str))
-    if path is None:
-        return {"success": False, "errorMessage": "Not exist: dir"}
-    p_dir = path / "trans" / get_today_string()
-    if not p_dir.exists():
-        p_dir.mkdir(parents=True)
-    trans_test.p_save = p_dir
-    return {"success": True, "data": str(p_dir)}
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        path = resolve_path_shared_drives(Path(path_str))
+        if path is None:
+            return {"success": False, "errorMessage": "Not exist: dir"}
+        p_dir = path / "trans" / get_today_string()
+        if not p_dir.exists():
+            p_dir.mkdir(parents=True)
+        trans_test.p_save = p_dir
+        return {"success": True, "data": str(p_dir)}
+
+    return wrapper()
 
 
 @router_qdra.get("/connect")
@@ -144,16 +176,20 @@ async def qmr_change_modcod_8psk_5_6() -> dict[str, bool]:
 
 
 @router_test.get("/processing")
-async def processing(path_str: str, p_script_str: str) -> dict[str, bool | str]:
+async def processing(session_name: str, path_str: str, p_script_str: str) -> dict[str, bool | str]:
     ip_address = trans_test.qdra_setting.ip_address
     if not check_ping(ip_address):
         return {"success": False, "errorMessage": "Not open: qDRA"}
+    t = threading.Thread(target=trans_test.processing, args=[session_name, path_str, p_script_str])
+    t.start()
     return {"success": True}
 
 
 @router_test.get("/getProcessingData")
-async def get_processing_data(p_remote_str: str, p_local_str: str) -> dict[str, bool | str]:
+async def get_processing_data(session_name: str, path_str: str) -> dict[str, bool | str]:
     ip_address = trans_test.qdra_setting.ip_address
     if not check_ping(ip_address):
         return {"success": False, "errorMessage": "Not open: qDRA"}
+    t = threading.Thread(target=trans_test.get_processing_data, args=[session_name, path_str])
+    t.start()
     return {"success": True}

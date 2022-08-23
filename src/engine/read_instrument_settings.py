@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, error_wrappers
 
@@ -18,6 +18,11 @@ P_SETTING = p_top / ".settings/settings.json"
 
 class CommonSetting(BaseModel):
     default_path: str
+
+
+class TransSetting(BaseModel):
+    ignore_file_extension: List[str]
+    ignore_file: List[str]
 
 
 class NetworkSetting(BaseModel):
@@ -84,6 +89,7 @@ class SignalAnalyzerSetting(BaseModel):
 
 class InstrumentSetting(BaseModel):
     common: CommonSetting
+    trans: TransSetting
     gl840: Gl840Setting
     sas: SasSetting
     bus: BusJigSetting

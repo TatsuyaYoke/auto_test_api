@@ -2,8 +2,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+import src.common.settings
+from src.common.decorator import exception
+from src.common.logger import set_logger
 from src.engine.bus_jig import BusJigSerial
 from src.engine.read_instrument_settings import read_json_file
+
+LOGGER_IS_ACTIVE_STREAM = src.common.settings.logger_is_active_stream
+logger = set_logger(__name__, is_active_stream=LOGGER_IS_ACTIVE_STREAM)
 
 router = APIRouter()
 
@@ -18,11 +24,14 @@ if SETTING is not None:
 
 
 @router.get("/bus_jig_connect")
-async def bus_jig_connect() -> dict[str, bool]:
+async def bus_jig_connect() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        BUS_JIG_SERIAL.set_port(port=PORT, baudrate=BAUDRATE, parity=PARITY)
+        port_status = BUS_JIG_SERIAL.get_port_status()
+        return {"success": port_status}
 
-    BUS_JIG_SERIAL.set_port(port=PORT, baudrate=BAUDRATE, parity=PARITY)
-    port_status = BUS_JIG_SERIAL.get_port_status()
-    return {"success": port_status}
+    return wrapper()
 
 
 @router.get("/bus_jig_disconnect")

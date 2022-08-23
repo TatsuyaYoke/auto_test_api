@@ -11,27 +11,26 @@ SETTING = read_json_file()
 if SETTING is not None:
     QMR_SETTING = SETTING.qmr
     QDRA_SETTING = SETTING.qdra
+    TRANS_SETTING = SETTING.trans
 
 
 def test_read_json_file():
 
-    if QMR_SETTING is not None:
-        print(QMR_SETTING)
-        assert QMR_SETTING.network.ip_address == "192.168.12.4"
-        assert QMR_SETTING.network.port == 80
+    print(QMR_SETTING)
+    assert QMR_SETTING.network.ip_address == "192.168.12.4"
+    assert QMR_SETTING.network.port == 80
 
-    assert QMR_SETTING is not None
+    print(QDRA_SETTING)
+    assert QDRA_SETTING.network.ip_address == "192.168.12.5"
+    assert QDRA_SETTING.network.port == 8081
+    assert QDRA_SETTING.ssh.ip_address == "192.168.12.5"
+    assert QDRA_SETTING.ssh.port == 22
+    assert QDRA_SETTING.ssh.username == "synspective"
+    assert QDRA_SETTING.ssh.password == "strix"
 
-    if QDRA_SETTING is not None:
-        print(QDRA_SETTING)
-        assert QDRA_SETTING.network.ip_address == "192.168.12.5"
-        assert QDRA_SETTING.network.port == 8081
-        assert QDRA_SETTING.ssh.ip_address == "192.168.12.5"
-        assert QDRA_SETTING.ssh.port == 22
-        assert QDRA_SETTING.ssh.username == "synspective"
-        assert QDRA_SETTING.ssh.password == "strix"
-
-    assert QDRA_SETTING is not None
+    print(TRANS_SETTING)
+    assert TRANS_SETTING.ignore_file_extension == ["bin"]
+    assert TRANS_SETTING.ignore_file == []
 
 
 def test_qmr():
@@ -79,10 +78,10 @@ def test_qdra_exec_sh():
 
     qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
 
-    path = Path("12TB/dsx0201_final")
-    sh_name = "data_processing_v4.sh"
-    session_name = "0726_case8_6_closed"
-    stdout, stderr = qdra_ssh.exec_sh(path=path, sh_name=sh_name, session_name=session_name)
+    path = Path("12TB/temporary/work")
+    p_script = Path("12TB/temporary/script/data_processing_v4.sh")  # TODO
+    session_name = "E2E_SET2_1_unset"
+    stdout, stderr = qdra_ssh.exec_sh(session_name=session_name, path=path, p_script=p_script)
     for out in stdout:
         print(out, end="")
     for out in stderr:
@@ -91,6 +90,7 @@ def test_qdra_exec_sh():
     assert len(list_dir) > 0
 
 
+@pytest.mark.skip()
 def test_qdra_exists():
 
     ip_address = QDRA_SETTING.ssh.ip_address
@@ -107,6 +107,7 @@ def test_qdra_exists():
     assert not qdra_ssh.exists(Path("12TB/dsx0201_final/data.sh"))
 
 
+@pytest.mark.skip()
 def test_qdra_mkdir():
 
     ip_address = QDRA_SETTING.ssh.ip_address
@@ -117,3 +118,16 @@ def test_qdra_mkdir():
     qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
     assert qdra_ssh.mkdir(Path("12TB/dsx0201_final/testDummy"))
     assert qdra_ssh.mkdir(Path("12TB/projectDummy/testDummy"))
+
+
+@pytest.mark.skip()
+def test_qdra_delete_dir():
+
+    ip_address = QDRA_SETTING.ssh.ip_address
+    port = QDRA_SETTING.ssh.port
+    username = QDRA_SETTING.ssh.username
+    password = QDRA_SETTING.ssh.password
+
+    qdra_ssh = QdraSsh(host=ip_address, port=port, username=username, password=password)
+    path = Path("12TB/temporary/work/E2E_SET2_1_unset")
+    qdra_ssh.delete_dir(path=path)
