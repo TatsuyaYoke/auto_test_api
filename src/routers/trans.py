@@ -113,7 +113,7 @@ async def make_dir(path_str: str) -> dict[str, bool | str]:
     def wrapper() -> dict[str, bool | str]:
         path = resolve_path_shared_drives(Path(path_str))
         if path is None:
-            return {"success": False, "errorMessage": "Not exist: dir"}
+            return {"success": False, "error": "Not exist: dir"}
         p_dir = path / "trans" / get_today_string()
         if not p_dir.exists():
             p_dir.mkdir(parents=True)
@@ -143,19 +143,19 @@ async def qdra_record_stop() -> dict[str, bool]:
 async def qdra_check_existence(path_str: str) -> dict[str, bool | str]:
     ip_address = trans_test.qdra_setting.ip_address
     if not check_ping(ip_address):
-        return {"success": False, "errorMessage": "Not open: qDRA"}
+        return {"success": False, "error": "Not open: qDRA"}
     exists = trans_test.qdra_ssh.exists(Path(path_str))
     if exists:
         return {"success": True}
     else:
-        return {"success": False, "errorMessage": f"Not exist: {path_str}"}
+        return {"success": False, "error": f"Not exist: {path_str}"}
 
 
 @router_qdra.get("/makeDir")
 async def qdra_make_dir(path_str: str) -> dict[str, bool | str]:
     ip_address = trans_test.qdra_setting.ip_address
     if not check_ping(ip_address):
-        return {"success": False, "errorMessage": "Not open: qDRA"}
+        return {"success": False, "error": "Not open: qDRA"}
     return {"success": trans_test.qdra_ssh.mkdir(Path(path_str))}
 
 
@@ -179,7 +179,7 @@ async def qmr_change_modcod_8psk_5_6() -> dict[str, bool]:
 async def processing(session_name: str, path_str: str, p_script_str: str) -> dict[str, bool | str]:
     ip_address = trans_test.qdra_setting.ip_address
     if not check_ping(ip_address):
-        return {"success": False, "errorMessage": "Not open: qDRA"}
+        return {"success": False, "error": "Not open: qDRA"}
     t = threading.Thread(target=trans_test.processing, args=[session_name, path_str, p_script_str])
     t.start()
     return {"success": True}
@@ -189,7 +189,7 @@ async def processing(session_name: str, path_str: str, p_script_str: str) -> dic
 async def get_processing_data(session_name: str, path_str: str) -> dict[str, bool | str]:
     ip_address = trans_test.qdra_setting.ip_address
     if not check_ping(ip_address):
-        return {"success": False, "errorMessage": "Not open: qDRA"}
+        return {"success": False, "error": "Not open: qDRA"}
     t = threading.Thread(target=trans_test.get_processing_data, args=[session_name, path_str])
     t.start()
     return {"success": True}

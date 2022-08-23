@@ -10,7 +10,7 @@ def exception(logger: logging.Logger) -> Any:
                 return response
             except Exception as error:
                 logger.error(error)
-                return {"success": False, "errorMessage": "Unexpected error. See log for details"}
+                return {"success": False, "error": "Unexpected error. See log for details"}
 
         return wrapper
 

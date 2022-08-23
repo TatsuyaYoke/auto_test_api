@@ -111,7 +111,7 @@ async def obs_hello() -> dict[str, str]:
 async def make_dir(path_str: str) -> dict[str, bool | str]:
     path = resolve_path_shared_drives(Path(path_str))
     if path is None:
-        return {"success": False, "errorMessage": "Not exist: dir"}
+        return {"success": False, "error": "Not exist: dir"}
     p_dir = path / "obs" / get_today_string()
     if not p_dir.exists():
         p_dir.mkdir(parents=True)
@@ -135,10 +135,10 @@ async def get_data_power_sensor() -> dict[str, bool | str | float]:
     is_open = obs_test.power_sensor.get_open_status()
 
     if not is_open:
-        return {"success": False, "errorMessage": "Not open: power sensor"}
+        return {"success": False, "error": "Not open: power sensor"}
     data = obs_test.power_sensor.get_data()
     if data is None:
-        return {"success": False, "errorMessage": "Data none"}
+        return {"success": False, "error": "Data none"}
     return {"success": True, "data": data}
 
 
@@ -158,7 +158,7 @@ async def restart_signal_analyzer() -> dict[str, bool | str]:
 
     is_open = obs_test.signal_analyzer.get_open_status()
     if not is_open:
-        return {"success": False, "errorMessage": "Not open: signal analyzer"}
+        return {"success": False, "error": "Not open: signal analyzer"}
 
     obs_test.signal_analyzer.send_restart_command()
     return {"success": True}
@@ -169,10 +169,10 @@ async def get_trace_signal_analyzer() -> dict[str, bool | str | FreqResponse]:
 
     is_open = obs_test.signal_analyzer.get_open_status()
     if not is_open:
-        return {"success": False, "errorMessage": "Not open: signal analyzer"}
+        return {"success": False, "error": "Not open: signal analyzer"}
     data = obs_test.signal_analyzer.get_data(trace_num=1)
     if data is None:
-        return {"success": False, "errorMessage": "Data none"}
+        return {"success": False, "error": "Data none"}
     return {"success": True, "data": data}
 
 
@@ -181,13 +181,13 @@ async def get_capture_signal_analyzer(picture_name: str) -> dict[str, bool | str
 
     is_open = obs_test.signal_analyzer.get_open_status()
     if not is_open:
-        return {"success": False, "errorMessage": "Not open: signal analyzer"}
+        return {"success": False, "error": "Not open: signal analyzer"}
     data = obs_test.signal_analyzer.get_capture(picture_name="capture_test", deletes_picture=True)
     if data is None:
-        return {"success": False, "errorMessage": "Data none"}
+        return {"success": False, "error": "Data none"}
 
     if obs_test.p_save is None:
-        return {"success": False, "errorMessage": "Not connect GDrive"}
+        return {"success": False, "error": "Not connect GDrive"}
 
     path = obs_test.p_save / f"{picture_name}.png"
     general.save_picture_from_binary_list(data=data, path=path)
@@ -199,11 +199,11 @@ async def get_chirp_before_obs(test_name: str, duration: int) -> dict[str, bool 
 
     is_open = obs_test.signal_analyzer.get_open_status()
     if not is_open:
-        return {"success": False, "errorMessage": "Not open: signal analyzer"}
+        return {"success": False, "error": "Not open: signal analyzer"}
     if obs_test.get_busy_status():
-        return {"success": False, "errorMessage": "busy"}
+        return {"success": False, "error": "busy"}
     if obs_test.p_save is None:
-        return {"success": False, "errorMessage": "Not found: dir"}
+        return {"success": False, "error": "Not found: dir"}
 
     t = threading.Thread(
         target=obs_test.get_chirp_before_obs,
@@ -225,11 +225,11 @@ async def get_obs_data(test_name: str, wait_sec: int) -> dict[str, bool | str]:
 
     is_open = obs_test.signal_analyzer.get_open_status()
     if not is_open:
-        return {"success": False, "errorMessage": "Not open: signal analyzer"}
+        return {"success": False, "error": "Not open: signal analyzer"}
     if obs_test.get_busy_status():
-        return {"success": False, "errorMessage": "busy"}
+        return {"success": False, "error": "busy"}
     if obs_test.p_save is None:
-        return {"success": False, "errorMessage": "Not found: dir"}
+        return {"success": False, "error": "Not found: dir"}
 
     t = threading.Thread(
         target=obs_test.get_obs_data,
