@@ -75,7 +75,7 @@ class TransTest:
         self.qdra_ssh.exec_sh(session_name=session_name, path=Path(path_str), p_script=Path(p_script_str))
         self.set_not_busy()
 
-    def get_processing_data(self, session_name: str, path_str: str) -> None:
+    def get_processing_data(self, session_name: str, path_str: str, delete_flag: bool = False) -> None:
         self.set_busy()
         path = Path(path_str)
         p_from = path / session_name
@@ -87,6 +87,8 @@ class TransTest:
                 p_to.mkdir(parents=True)
             for f in file_list:
                 self.qdra_ssh.get_file(p_server=p_from / f, p_save=p_to / f)
+        if delete_flag:
+            self.qdra_ssh.delete_dir(p_from)
 
         self.set_not_busy()
 
@@ -186,10 +188,10 @@ async def processing(session_name: str, path_str: str, p_script_str: str) -> dic
 
 
 @router_test.get("/getProcessingData")
-async def get_processing_data(session_name: str, path_str: str) -> dict[str, bool | str]:
+async def get_processing_data(session_name: str, path_str: str, delete_flag: bool = False) -> dict[str, bool | str]:
     ip_address = trans_test.qdra_setting.ip_address
     if not check_ping(ip_address):
         return {"success": False, "error": "Not open: qDRA"}
-    t = threading.Thread(target=trans_test.get_processing_data, args=[session_name, path_str])
+    t = threading.Thread(target=trans_test.get_processing_data, args=[session_name, path_str, delete_flag])
     t.start()
     return {"success": True}
