@@ -24,6 +24,9 @@ origins = [
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 app.include_router(src.routers.bus.router, prefix="/bus", tags=["bus"])
+app.include_router(src.routers.bus.router_bus_jig, prefix="/bus/bus_jig", tags=["bus"])
+app.include_router(src.routers.bus.router_sas, prefix="/bus/sas", tags=["bus"])
+app.include_router(src.routers.bus.router_gl840, prefix="/bus/gl840", tags=["bus"])
 app.include_router(src.routers.obs.router, prefix="/obs", tags=["obs"])
 app.include_router(src.routers.obs.router_common, prefix="/obs/common", tags=["obs"])
 app.include_router(src.routers.obs.router_power_sensor, prefix="/obs/power_sensor", tags=["obs"])

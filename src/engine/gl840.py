@@ -40,14 +40,13 @@ SamplingType = Literal[
 
 
 class Gl840Visa(VisaDriver):
-    def __init__(self, address: str) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self.__is_recording = False
-        self.address = address
 
-    def connect(self) -> bool:
+    def connect(self, address: str) -> bool:
 
-        return super().set_resource(address=self.address, idn_pattern=IDN_PATTERN)
+        return super().set_resource(address=address, idn_pattern=IDN_PATTERN)
 
     def record_start(self) -> bool:
 

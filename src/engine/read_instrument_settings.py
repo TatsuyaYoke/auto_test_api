@@ -92,7 +92,7 @@ class InstrumentSetting(BaseModel):
     trans: TransSetting
     gl840: Gl840Setting
     sas: SasSetting
-    bus: BusJigSetting
+    bus_jig: BusJigSetting
     qmr: QmrSetting
     qdra: QdraSetting
     power_sensor: PowerSensorSetting

@@ -6,57 +6,198 @@ import src.common.settings
 from src.common.decorator import exception
 from src.common.logger import set_logger
 from src.engine.bus_jig import BusJigSerial
-from src.engine.read_instrument_settings import read_json_file
+from src.engine.gl840 import Gl840Visa
+from src.engine.read_instrument_settings import (
+    InstrumentSetting,
+    SasOutputSetting,
+    SasRepeatSetting,
+    read_json_file,
+)
+from src.engine.sas import SasSerial
 
 LOGGER_IS_ACTIVE_STREAM = src.common.settings.logger_is_active_stream
 logger = set_logger(__name__, is_active_stream=LOGGER_IS_ACTIVE_STREAM)
 
+
+class BusTest:
+    def __init__(self, settings: InstrumentSetting) -> None:
+
+        self.bus_jig_setting = settings.bus_jig.serial
+        self.bus_jig = BusJigSerial()
+
+        self.gl840_setting = settings.gl840.visa
+        self.gl840 = Gl840Visa()
+
+        self.sas_setting = settings.sas.serial
+        self.sas = SasSerial()
+
+
+settings = read_json_file()
+if settings is not None:
+    bus_test = BusTest(settings=settings)
+
 router = APIRouter()
+router_bus_jig = APIRouter()
+router_sas = APIRouter()
+router_gl840 = APIRouter()
 
 
-BUS_JIG_SERIAL = BusJigSerial()
-SETTING = read_json_file()
-if SETTING is not None:
-    BUS_SETTING = SETTING.bus
-    PORT = BUS_SETTING.serial.port
-    BAUDRATE = BUS_SETTING.serial.baudrate
-    PARITY = BUS_SETTING.serial.parity
+@router.get("/hello")
+async def bus_hello() -> dict[str, str]:
+    return {"Hello": "bus"}
 
 
-@router.get("/bus_jig_connect")
+@router_bus_jig.get("/connect")
 async def bus_jig_connect() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        BUS_JIG_SERIAL.set_port(port=PORT, baudrate=BAUDRATE, parity=PARITY)
-        port_status = BUS_JIG_SERIAL.get_port_status()
-        return {"success": port_status}
+        port = bus_test.bus_jig_setting.port
+        baudrate = bus_test.bus_jig_setting.baudrate
+        parity = bus_test.bus_jig_setting.parity
+        bus_test.bus_jig.set_port(port=port, baudrate=baudrate, parity=parity)
+        return {"isOpen": bus_test.bus_jig.get_port_status()}
 
     return wrapper()
 
 
-@router.get("/bus_jig_disconnect")
+@router_bus_jig.get("/disconnect")
 async def bus_jig_disconnect() -> dict[str, bool]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        bus_test.bus_jig.close_port()
+        return {"isOpen": not bus_test.bus_jig.get_port_status()}
 
-    BUS_JIG_SERIAL.close_port()
-    port_status = BUS_JIG_SERIAL.get_port_status()
-    return {"success": not port_status}
+    return wrapper()
 
 
-@router.get("/sat_ena")
-async def sat_ena() -> dict[str, bool]:
-
-    if BUS_JIG_SERIAL.get_port_status():
-        BUS_JIG_SERIAL.send_sat_ena()
+@router_bus_jig.get("/sat_ena")
+async def sat_ena() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        is_open = bus_test.bus_jig.get_port_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: bus jig"}
+        bus_test.bus_jig.send_sat_ena()
         return {"success": True}
-    else:
-        return {"success": False}
+
+    return wrapper()
 
 
-@router.get("/sat_dis")
-async def sat_dis() -> dict[str, bool]:
-
-    if BUS_JIG_SERIAL.get_port_status():
-        BUS_JIG_SERIAL.send_sat_dis()
+@router_bus_jig.get("/sat_dis")
+async def sat_dis() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        is_open = bus_test.bus_jig.get_port_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: bus jig"}
+        bus_test.bus_jig.send_sat_dis()
         return {"success": True}
-    else:
-        return {"success": False}
+
+    return wrapper()
+
+
+@router_gl840.get("/connect")
+async def gl840_connect() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        address = bus_test.gl840_setting
+        bus_test.gl840.connect(address=address)
+        return {"isOpen": bus_test.gl840.get_open_status()}
+
+    return wrapper()
+
+
+@router_gl840.get("/disconnect")
+async def gl840_disconnect() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        bus_test.gl840.close_resource()
+        return {"isOpen": bus_test.gl840.get_open_status()}
+
+    return wrapper()
+
+
+@router_gl840.get("/recordStart")
+async def gl840_record_start() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        bus_test.gl840.record_start()
+        return {"success": True}
+
+    return wrapper()
+
+
+@router_gl840.get("/recordStop")
+async def gl840_record_stop() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        bus_test.gl840.record_stop()
+        return {"success": True}
+
+    return wrapper()
+
+
+@router_sas.get("/connect")
+async def sas_connect() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        port = bus_test.sas_setting.port
+        baudrate = bus_test.sas_setting.baudrate
+        parity = bus_test.sas_setting.parity
+        bus_test.sas.set_port(port=port, baudrate=baudrate, parity=parity)
+        return {"isOpen": bus_test.sas.get_port_status()}
+
+    return wrapper()
+
+
+@router_sas.get("/disconnect")
+async def sas_disconnect() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        bus_test.sas.close_port()
+        return {"isOpen": bus_test.sas.get_port_status()}
+
+    return wrapper()
+
+
+@router_sas.get("/on")
+async def sas_on(voc: float, isc: float, fill_factor: float) -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        setting = SasOutputSetting(voc=voc, isc=isc, fill_factor=fill_factor)
+        bus_test.sas.output(onoff="on", setting=setting)
+        return {"success": bus_test.sas.get_output_status()}
+
+    return wrapper()
+
+
+@router_sas.get("/off")
+async def sas_off() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        bus_test.sas.output("off")
+        return {"success": not bus_test.sas.get_output_status()}
+
+    return wrapper()
+
+
+@router_sas.get("/repeatOn")
+async def sas_repeat_on(voc: float, isc: float, fill_factor: float, orbit_period: int, sun_rate: float, offset: int) -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        output_setting = SasOutputSetting(voc=voc, isc=isc, fill_factor=fill_factor)
+        repeat_setting = SasRepeatSetting(orbit_period=orbit_period, sun_rate=sun_rate, offset=offset, interval=1)
+        bus_test.sas.repeat_on(output_setting=output_setting, repeat_setting=repeat_setting)
+        return {"success": bus_test.sas.get_repeat_status()}
+
+    return wrapper()
+
+
+@router_sas.get("/repeatOff")
+async def sas_repeat_off() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        bus_test.sas.repeat_off()
+        return {"success": bus_test.sas.get_repeat_status()}
+
+    return wrapper()

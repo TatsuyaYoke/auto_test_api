@@ -30,7 +30,7 @@
             "offset": 0
         }
     },
-    "bus": {
+    "bus_jig": {
         "serial": {
             "port": "COM1",
             "baudrate": 9600,

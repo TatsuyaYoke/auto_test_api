@@ -105,7 +105,7 @@ router_test = APIRouter()
 
 
 @router.get("/hello")
-async def obs_hello() -> dict[str, str]:
+async def trans_hello() -> dict[str, str]:
     return {"Hello": "trans"}
 
 
