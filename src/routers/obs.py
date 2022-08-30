@@ -42,7 +42,7 @@ class ObsTest:
     def get_busy_status(self) -> bool:
         return self.__is_busy
 
-    def get_obs_data(self, test_name: str, obs_duration: int, warm_up_duration: int, wait_sec: int) -> Optional[dict[str, list[float]]]:
+    def get_obs_data(self, test_name: str, obs_duration: int, warm_up_duration: int, hold_duration: int) -> Optional[dict[str, list[float]]]:
         def get_power_data() -> None:
             interval = 0.1
             elapsed_time = 0.0
@@ -92,7 +92,7 @@ class ObsTest:
             filename_stem = "obs"
             p_png = p_dir / f"{filename_stem}.png"
 
-            for _ in range(wait_sec):
+            for _ in range(hold_duration):
                 if not self.get_busy_status():
                     break
                 sleep(1)
@@ -248,7 +248,7 @@ async def get_capture_signal_analyzer(pictureName: str) -> dict[str, bool | str 
 
 
 @router_test.get("/startObs")
-async def get_chirp_waveform(testName: str, obsDuration: int, warmUpDuration: int, waitSec: int) -> dict[str, bool | str | dict[str, list[float]]]:  # noqa
+async def get_chirp_waveform(testName: str, obsDuration: int, warmUpDuration: int, holdDuration: int) -> dict[str, bool | str | dict[str, list[float]]]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str | dict[str, list[float]]]:
         is_open_power_sensor = obs_test.power_sensor.get_open_status()
@@ -264,7 +264,7 @@ async def get_chirp_waveform(testName: str, obsDuration: int, warmUpDuration: in
         if not obs_test.p_save.exists():
             return {"success": False, "error": "Not exist: dir"}
 
-        data = obs_test.get_obs_data(testName, obsDuration, warmUpDuration, waitSec)
+        data = obs_test.get_obs_data(testName, obsDuration, warmUpDuration, holdDuration)
         if data is not None:
             return {"success": True, "data": data}
         else:
