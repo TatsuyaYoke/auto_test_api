@@ -3,6 +3,7 @@ from __future__ import annotations
 import threading
 from pathlib import Path
 from time import perf_counter, sleep
+from typing import Optional
 
 from fastapi import APIRouter
 
@@ -26,6 +27,7 @@ class ObsTest:
 
         power_sensor_address = settings.power_sensor.visa
         self.power_sensor = PowerSensor(address=power_sensor_address)
+        self.power_sensor_data: Optional[dict[str, list[float]]] = None
 
         signal_analyzer_address = settings.signal_analyzer.visa
         p_capture = Path(settings.signal_analyzer.capture_path)
@@ -40,61 +42,71 @@ class ObsTest:
     def get_busy_status(self) -> bool:
         return self.__is_busy
 
-    def get_chirp_before_obs(self, test_name: str, duration: int) -> None:
-        self.set_busy()
+    def get_obs_data(self, test_name: str, obs_duration: int, warm_up_duration: int, wait_sec: int) -> Optional[dict[str, list[float]]]:
+        def get_power_data() -> None:
+            interval = 0.1
+            elapsed_time = 0.0
+            time_start = perf_counter()
+            time_list: list[float] = []
+            power_list: list[float] = []
 
-        if self.p_save is not None:
-            p_dir = self.p_save / test_name
-            if not p_dir.exists():
-                p_dir.mkdir()
-
-            for test_num in range(duration):
-                picture_name = f"before_obs_{test_num}"
-                filename = f"{picture_name}.png"
-                path = p_dir / filename
-                data = self.signal_analyzer.get_capture(picture_name=picture_name, deletes_picture=True)
-                if data is not None:
-                    general.save_picture_from_binary_list(data=data, path=path)
-                if not self.get_busy_status():
-                    break
-                sleep(1)
-        self.set_not_busy()
-
-    def get_obs_data(self, test_name: str, wait_sec: int) -> None:
-        self.set_busy()
-        interval = 0.1
-        elapsed_time = 0.0
-        time_start = perf_counter()
-        time_list: list[float] = []
-        power_list: list[float] = []
-
-        if self.p_save is not None:
-            p_dir = self.p_save / test_name
-            if not p_dir.exists():
-                p_dir.mkdir()
-
-            self.signal_analyzer.send_restart_command()
-
-            while elapsed_time <= wait_sec:
+            while elapsed_time <= (obs_duration + warm_up_duration):
                 sleep(interval)
                 elapsed_time = perf_counter() - time_start
                 data = self.power_sensor.get_data()
                 if data is not None:
                     time_list.append(elapsed_time)
                     power_list.append(data)
+                if not self.get_busy_status():
+                    break
 
             filename_stem = "obs"
-            p_png = p_dir / f"{filename_stem}.png"
             p_csv = p_dir / f"{filename_stem}.csv"
-
-            capture = self.signal_analyzer.get_capture(picture_name=filename_stem, deletes_picture=True)
-            if capture is not None:
-                general.save_picture_from_binary_list(data=capture, path=p_png)
-
             dict_data = {"time": time_list, "power": power_list}
+            self.power_sensor_data = dict_data
             general.save_csv_from_dict(data=dict_data, path=p_csv)
 
+        self.set_busy()
+
+        if self.p_save is not None:
+            p_dir = self.p_save / test_name
+            if not p_dir.exists():
+                p_dir.mkdir()
+
+            self.power_sensor_data = None
+            t = threading.Thread(target=get_power_data)
+            t.start()
+
+            for test_num in range(warm_up_duration):
+                if not self.get_busy_status():
+                    break
+                picture_name = f"before_obs_{test_num}"
+                filename = f"{picture_name}.png"
+                path = p_dir / filename
+                data = self.signal_analyzer.get_capture(picture_name=picture_name, deletes_picture=True)
+                if data is not None:
+                    general.save_picture_from_binary_list(data=data, path=path)
+                sleep(1)
+
+            self.signal_analyzer.send_restart_command()
+            filename_stem = "obs"
+            p_png = p_dir / f"{filename_stem}.png"
+
+            for _ in range(wait_sec):
+                if not self.get_busy_status():
+                    break
+                sleep(1)
+
+            if self.get_busy_status():
+                capture = self.signal_analyzer.get_capture(picture_name=filename_stem, deletes_picture=True)
+                if capture is not None:
+                    general.save_picture_from_binary_list(data=capture, path=p_png)
+
+            t.join()
+
         self.set_not_busy()
+
+        return self.power_sensor_data
 
 
 settings = read_json_file()
@@ -114,10 +126,10 @@ async def obs_hello() -> dict[str, str]:
 
 
 @router_common.get("/makeDir")
-async def make_dir(path_str: str, project: str) -> dict[str, bool | str]:
+async def make_dir(pathStr: str, project: str) -> dict[str, bool | str]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        path = resolve_path_shared_drives(Path(path_str))
+        path = resolve_path_shared_drives(Path(pathStr))
         if path is None:
             return {"success": False, "error": "Not exist: dir"}
         p_dir = path / project / "auto_test" / "obs" / get_today_string()
@@ -151,14 +163,18 @@ async def disconnect_power_sensor() -> dict[str, bool]:
 
 @router_power_sensor.get("/getData")
 async def get_data_power_sensor() -> dict[str, bool | str | float]:
-    is_open = obs_test.power_sensor.get_open_status()
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str | float]:
+        is_open = obs_test.power_sensor.get_open_status()
 
-    if not is_open:
-        return {"success": False, "error": "Not open: power sensor"}
-    data = obs_test.power_sensor.get_data()
-    if data is None:
-        return {"success": False, "error": "Data none"}
-    return {"success": True, "data": data}
+        if not is_open:
+            return {"success": False, "error": "Not open: power sensor"}
+        data = obs_test.power_sensor.get_data()
+        if data is None:
+            return {"success": False, "error": "Data none"}
+        return {"success": True, "data": data}
+
+    return wrapper()
 
 
 @router_signal_analyzer.get("/connect")
@@ -182,85 +198,86 @@ async def disconnect_signal_analyzer() -> dict[str, bool]:
 
 @router_signal_analyzer.get("/restart")
 async def restart_signal_analyzer() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        is_open = obs_test.signal_analyzer.get_open_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: signal analyzer"}
 
-    is_open = obs_test.signal_analyzer.get_open_status()
-    if not is_open:
-        return {"success": False, "error": "Not open: signal analyzer"}
+        obs_test.signal_analyzer.send_restart_command()
+        return {"success": True}
 
-    obs_test.signal_analyzer.send_restart_command()
-    return {"success": True}
+    return wrapper()
 
 
 @router_signal_analyzer.get("/getTrace")
 async def get_trace_signal_analyzer() -> dict[str, bool | str | FreqResponse]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str | FreqResponse]:
+        is_open = obs_test.signal_analyzer.get_open_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: signal analyzer"}
+        data = obs_test.signal_analyzer.get_data(trace_num=1)
+        if data is None:
+            return {"success": False, "error": "Data none"}
+        return {"success": True, "data": data}
 
-    is_open = obs_test.signal_analyzer.get_open_status()
-    if not is_open:
-        return {"success": False, "error": "Not open: signal analyzer"}
-    data = obs_test.signal_analyzer.get_data(trace_num=1)
-    if data is None:
-        return {"success": False, "error": "Data none"}
-    return {"success": True, "data": data}
+    return wrapper()
 
 
 @router_signal_analyzer.get("/getCapture")
-async def get_capture_signal_analyzer(picture_name: str) -> dict[str, bool | str | list[int | float]]:
+async def get_capture_signal_analyzer(pictureName: str) -> dict[str, bool | str | list[int | float]]:  # noqa
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str | list[int | float]]:
+        is_open = obs_test.signal_analyzer.get_open_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: signal analyzer"}
+        data = obs_test.signal_analyzer.get_capture(picture_name="capture_test", deletes_picture=True)
+        if data is None:
+            return {"success": False, "error": "Data none"}
+        if obs_test.p_save is None:
+            return {"success": False, "error": "Not connect GDrive"}
+        if not obs_test.p_save.exists():
+            return {"success": False, "error": "Not exist: dir"}
 
-    is_open = obs_test.signal_analyzer.get_open_status()
-    if not is_open:
-        return {"success": False, "error": "Not open: signal analyzer"}
-    data = obs_test.signal_analyzer.get_capture(picture_name="capture_test", deletes_picture=True)
-    if data is None:
-        return {"success": False, "error": "Data none"}
+        path = obs_test.p_save / f"{pictureName}.png"
+        general.save_picture_from_binary_list(data=data, path=path)
+        return {"success": True, "data": str(path)}
 
-    if obs_test.p_save is None:
-        return {"success": False, "error": "Not connect GDrive"}
-
-    path = obs_test.p_save / f"{picture_name}.png"
-    general.save_picture_from_binary_list(data=data, path=path)
-    return {"success": True, "data": str(path)}
-
-
-@router_test.get("/getChirpBeforeObs")
-async def get_chirp_before_obs(test_name: str, duration: int) -> dict[str, bool | str]:
-
-    is_open = obs_test.signal_analyzer.get_open_status()
-    if not is_open:
-        return {"success": False, "error": "Not open: signal analyzer"}
-    if obs_test.get_busy_status():
-        return {"success": False, "error": "busy"}
-    if obs_test.p_save is None:
-        return {"success": False, "error": "Not found: dir"}
-
-    t = threading.Thread(
-        target=obs_test.get_chirp_before_obs,
-        args=[test_name, duration],
-    )
-    t.start()
-    return {"success": True}
+    return wrapper()
 
 
-@router_test.get("/stopChirpBeforeObs")
-async def stop_chirp_before_obs() -> dict[str, bool]:
+@router_test.get("/startObs")
+async def get_chirp_waveform(testName: str, obsDuration: int, warmUpDuration: int, waitSec: int) -> dict[str, bool | str | dict[str, list[float]]]:  # noqa
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str | dict[str, list[float]]]:
+        is_open_power_sensor = obs_test.power_sensor.get_open_status()
+        is_open_signal_analyzer = obs_test.signal_analyzer.get_open_status()
+        if not is_open_power_sensor:
+            return {"success": False, "error": "Not open: power sensor"}
+        if not is_open_signal_analyzer:
+            return {"success": False, "error": "Not open: signal analyzer"}
+        if obs_test.get_busy_status():
+            return {"success": False, "error": "busy"}
+        if obs_test.p_save is None:
+            return {"success": False, "error": "Not connect GDrive"}
+        if not obs_test.p_save.exists():
+            return {"success": False, "error": "Not exist: dir"}
 
-    obs_test.set_not_busy()
-    return {"success": True}
+        data = obs_test.get_obs_data(testName, obsDuration, warmUpDuration, waitSec)
+        if data is not None:
+            return {"success": True, "data": data}
+        else:
+            return {"success": False, "error": "Data is none"}
+
+    return wrapper()
 
 
-@router_test.get("/getObsData")
-async def get_obs_data(test_name: str, wait_sec: int) -> dict[str, bool | str]:
+@router_test.get("/stopObs")
+async def stop_obs() -> dict[str, bool]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool]:
+        obs_test.set_not_busy()
+        return {"success": True}
 
-    is_open = obs_test.signal_analyzer.get_open_status()
-    if not is_open:
-        return {"success": False, "error": "Not open: signal analyzer"}
-    if obs_test.get_busy_status():
-        return {"success": False, "error": "busy"}
-    if obs_test.p_save is None:
-        return {"success": False, "error": "Not found: dir"}
-
-    t = threading.Thread(
-        target=obs_test.get_obs_data,
-        args=[test_name, wait_sec],
-    )
-    t.start()
-    return {"success": True}
+    return wrapper()

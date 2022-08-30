@@ -110,10 +110,10 @@ async def trans_hello() -> dict[str, str]:
 
 
 @router_common.get("/makeDir")
-async def make_dir(path_str: str, project: str) -> dict[str, bool | str]:
+async def make_dir(pathStr: str, project: str) -> dict[str, bool | str]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        path = resolve_path_shared_drives(Path(path_str))
+        path = resolve_path_shared_drives(Path(pathStr))
         if path is None:
             return {"success": False, "error": "Not exist: dir"}
         p_dir = path / project / "auto_test" / "trans" / get_today_string()
