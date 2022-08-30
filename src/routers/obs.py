@@ -143,7 +143,7 @@ async def connect_power_sensor() -> dict[str, bool]:
 async def disconnect_power_sensor() -> dict[str, bool]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool]:
-        obs_test.power_sensor.close_resource()
+        obs_test.power_sensor.disconnect()
         return {"success": True, "isOpen": obs_test.power_sensor.get_open_status()}
 
     return wrapper()
@@ -174,7 +174,7 @@ async def connect_signal_analyzer() -> dict[str, bool]:
 async def disconnect_signal_analyzer() -> dict[str, bool]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool]:
-        obs_test.signal_analyzer.close_resource()
+        obs_test.signal_analyzer.disconnect()
         return {"success": True, "isOpen": obs_test.signal_analyzer.get_open_status()}
 
     return wrapper()

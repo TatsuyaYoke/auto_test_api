@@ -34,11 +34,14 @@ class VisaDriver:
 
         return self.__is_open
 
-    def close_resource(self) -> bool:
+    def close_resource(self) -> None:
+        if self.__rm is not None:
+            self.__rm.close()
+
+    def disconnect(self) -> bool:
         self.__is_open = False
         if self.__rm is not None and self.__inst is not None:
             self.__inst.close()
-            self.__rm.close()
 
         return self.__is_open
 
