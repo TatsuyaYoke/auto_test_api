@@ -6,11 +6,17 @@ from time import perf_counter, sleep
 
 from fastapi import APIRouter
 
+import src.common.settings
 from src.common import general
+from src.common.decorator import exception
 from src.common.general import get_today_string, resolve_path_shared_drives
+from src.common.logger import set_logger
 from src.engine.power_sensor import PowerSensor
 from src.engine.read_instrument_settings import InstrumentSetting, read_json_file
 from src.engine.signal_analyzer import FreqResponse, SignalAnalyzer
+
+LOGGER_IS_ACTIVE_STREAM = src.common.settings.logger_is_active_stream
+logger = set_logger(__name__, is_active_stream=LOGGER_IS_ACTIVE_STREAM)
 
 
 class ObsTest:
@@ -108,26 +114,39 @@ async def obs_hello() -> dict[str, str]:
 
 
 @router_common.get("/makeDir")
-async def make_dir(path_str: str) -> dict[str, bool | str]:
-    path = resolve_path_shared_drives(Path(path_str))
-    if path is None:
-        return {"success": False, "error": "Not exist: dir"}
-    p_dir = path / "obs" / get_today_string()
-    if not p_dir.exists():
-        p_dir.mkdir(parents=True)
-    obs_test.p_save = p_dir
-    return {"success": True, "data": str(p_dir)}
+async def make_dir(path_str: str, project: str) -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        path = resolve_path_shared_drives(Path(path_str))
+        if path is None:
+            return {"success": False, "error": "Not exist: dir"}
+        p_dir = path / project / "auto_test" / "obs" / get_today_string()
+        if not p_dir.exists():
+            p_dir.mkdir(parents=True)
+        obs_test.p_save = p_dir
+
+        return {"success": True, "data": str(p_dir)}
+
+    return wrapper()
 
 
 @router_power_sensor.get("/connect")
 async def connect_power_sensor() -> dict[str, bool]:
-    return {"isOpen": obs_test.power_sensor.connect()}
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool]:
+        return {"success": True, "isOpen": obs_test.power_sensor.connect()}
+
+    return wrapper()
 
 
 @router_power_sensor.get("/disconnect")
 async def disconnect_power_sensor() -> dict[str, bool]:
-    obs_test.power_sensor.close_resource()
-    return {"isOpen": obs_test.power_sensor.get_open_status()}
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool]:
+        obs_test.power_sensor.close_resource()
+        return {"success": True, "isOpen": obs_test.power_sensor.get_open_status()}
+
+    return wrapper()
 
 
 @router_power_sensor.get("/getData")
@@ -144,13 +163,21 @@ async def get_data_power_sensor() -> dict[str, bool | str | float]:
 
 @router_signal_analyzer.get("/connect")
 async def connect_signal_analyzer() -> dict[str, bool]:
-    return {"isOpen": obs_test.signal_analyzer.connect()}
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool]:
+        return {"success": True, "isOpen": obs_test.signal_analyzer.connect()}
+
+    return wrapper()
 
 
 @router_signal_analyzer.get("/disconnect")
 async def disconnect_signal_analyzer() -> dict[str, bool]:
-    obs_test.signal_analyzer.close_resource()
-    return {"isOpen": obs_test.signal_analyzer.get_open_status()}
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool]:
+        obs_test.signal_analyzer.close_resource()
+        return {"success": True, "isOpen": obs_test.signal_analyzer.get_open_status()}
+
+    return wrapper()
 
 
 @router_signal_analyzer.get("/restart")

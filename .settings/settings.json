@@ -56,7 +56,7 @@
         }
     },
     "power_sensor": {
-        "visa": "USB0::0x2A8D::0x2C18::MY61450004::0::INSTR"
+        "visa": "USB0::0x2A8D::0x7F18::MY60430008::0::INSTR"
     },
     "signal_analyzer": {
         "visa": "TCPIP0::192.168.3.240::inst0::INSTR",

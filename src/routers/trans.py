@@ -110,13 +110,13 @@ async def trans_hello() -> dict[str, str]:
 
 
 @router_common.get("/makeDir")
-async def make_dir(path_str: str) -> dict[str, bool | str]:
+async def make_dir(path_str: str, project: str) -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
         path = resolve_path_shared_drives(Path(path_str))
         if path is None:
             return {"success": False, "error": "Not exist: dir"}
-        p_dir = path / "trans" / get_today_string()
+        p_dir = path / project / "auto_test" / "trans" / get_today_string()
         if not p_dir.exists():
             p_dir.mkdir(parents=True)
         trans_test.p_save = p_dir
@@ -127,8 +127,12 @@ async def make_dir(path_str: str) -> dict[str, bool | str]:
 
 @router_qdra.get("/connect")
 async def connect_qdra() -> dict[str, bool]:
-    ip_address = trans_test.qdra_setting.ip_address
-    return {"isOpen": check_ping(ip_address)}
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool]:
+        ip_address = trans_test.qdra_setting.ip_address
+        return {"success": True, "isOpen": check_ping(ip_address)}
+
+    return wrapper()
 
 
 @router_qdra.get("/recordStart")
@@ -163,8 +167,12 @@ async def qdra_make_dir(path_str: str) -> dict[str, bool | str]:
 
 @router_qmr.get("/connect")
 async def connect_qmr() -> dict[str, bool]:
-    ip_address = trans_test.qmr_setting.ip_address
-    return {"isOpen": check_ping(ip_address)}
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool]:
+        ip_address = trans_test.qmr_setting.ip_address
+        return {"success": True, "isOpen": check_ping(ip_address)}
+
+    return wrapper()
 
 
 @router_qmr.get("/8psk_2_3")
