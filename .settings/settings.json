@@ -32,7 +32,7 @@
     },
     "bus_jig": {
         "serial": {
-            "port": "COM1",
+            "port": "COM11",
             "baudrate": 9600,
             "parity": "N"
         }

@@ -55,7 +55,7 @@ async def bus_jig_connect() -> dict[str, bool | str]:
         baudrate = bus_test.bus_jig_setting.baudrate
         parity = bus_test.bus_jig_setting.parity
         bus_test.bus_jig.set_port(port=port, baudrate=baudrate, parity=parity)
-        return {"isOpen": bus_test.bus_jig.get_port_status()}
+        return {"success": True, "isOpen": bus_test.bus_jig.get_port_status()}
 
     return wrapper()
 
@@ -65,7 +65,7 @@ async def bus_jig_disconnect() -> dict[str, bool]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
         bus_test.bus_jig.close_port()
-        return {"isOpen": not bus_test.bus_jig.get_port_status()}
+        return {"success": True, "isOpen": bus_test.bus_jig.get_port_status()}
 
     return wrapper()
 
@@ -102,7 +102,7 @@ async def gl840_connect() -> dict[str, bool | str]:
     def wrapper() -> dict[str, bool | str]:
         address = bus_test.gl840_setting
         bus_test.gl840.connect(address=address)
-        return {"isOpen": bus_test.gl840.get_open_status()}
+        return {"success": True, "isOpen": bus_test.gl840.get_open_status()}
 
     return wrapper()
 
@@ -112,7 +112,7 @@ async def gl840_disconnect() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
         bus_test.gl840.close_resource()
-        return {"isOpen": bus_test.gl840.get_open_status()}
+        return {"success": True, "isOpen": bus_test.gl840.get_open_status()}
 
     return wrapper()
 
@@ -145,7 +145,7 @@ async def sas_connect() -> dict[str, bool | str]:
         baudrate = bus_test.sas_setting.baudrate
         parity = bus_test.sas_setting.parity
         bus_test.sas.set_port(port=port, baudrate=baudrate, parity=parity)
-        return {"isOpen": bus_test.sas.get_port_status()}
+        return {"success": True, "isOpen": bus_test.sas.get_port_status()}
 
     return wrapper()
 
@@ -155,7 +155,7 @@ async def sas_disconnect() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
         bus_test.sas.close_port()
-        return {"isOpen": bus_test.sas.get_port_status()}
+        return {"success": True, "isOpen": bus_test.sas.get_port_status()}
 
     return wrapper()
 
