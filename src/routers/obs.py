@@ -25,13 +25,11 @@ class ObsTest:
         self.__is_busy = False
         self.p_save = resolve_path_shared_drives(Path(settings.common.default_path))
 
-        power_sensor_address = settings.power_sensor.visa
-        self.power_sensor = PowerSensor(address=power_sensor_address)
+        self.power_sensor = PowerSensor()
         self.power_sensor_data: Optional[dict[str, list[float]]] = None
 
-        signal_analyzer_address = settings.signal_analyzer.visa
         p_capture = Path(settings.signal_analyzer.capture_path)
-        self.signal_analyzer = SignalAnalyzer(address=signal_analyzer_address, p_capture=p_capture)
+        self.signal_analyzer = SignalAnalyzer(p_capture=p_capture)
 
     def set_busy(self) -> None:
         self.__is_busy = True
@@ -143,10 +141,11 @@ async def make_dir(pathStr: str, project: str) -> dict[str, bool | str]:  # noqa
 
 
 @router_power_sensor.get("/connect")
-async def connect_power_sensor() -> dict[str, bool]:
+async def connect_power_sensor(accessPoint: str) -> dict[str, bool]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool]:
-        return {"success": True, "isOpen": obs_test.power_sensor.connect()}
+        obs_test.power_sensor.connect(address=accessPoint)
+        return {"success": True, "isOpen": obs_test.power_sensor.get_open_status()}
 
     return wrapper()
 
@@ -178,10 +177,11 @@ async def get_data_power_sensor() -> dict[str, bool | str | float]:
 
 
 @router_signal_analyzer.get("/connect")
-async def connect_signal_analyzer() -> dict[str, bool]:
+async def connect_signal_analyzer(accessPoint: str) -> dict[str, bool]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool]:
-        return {"success": True, "isOpen": obs_test.signal_analyzer.connect()}
+        obs_test.signal_analyzer.connect(address=accessPoint)
+        return {"success": True, "isOpen": obs_test.signal_analyzer.get_open_status()}
 
     return wrapper()
 

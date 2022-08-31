@@ -48,14 +48,16 @@ async def bus_hello() -> dict[str, str]:
 
 
 @router_bus_jig.get("/connect")
-async def bus_jig_connect() -> dict[str, bool | str]:
+async def bus_jig_connect(accessPoint: str) -> dict[str, bool | str]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        port = bus_test.bus_jig_setting.port
         baudrate = bus_test.bus_jig_setting.baudrate
         parity = bus_test.bus_jig_setting.parity
-        bus_test.bus_jig.set_port(port=port, baudrate=baudrate, parity=parity)
-        return {"success": True, "isOpen": bus_test.bus_jig.get_port_status()}
+        is_success = bus_test.bus_jig.set_port(port=accessPoint.upper(), baudrate=baudrate, parity=parity)
+        if is_success:
+            return {"success": True, "isOpen": bus_test.bus_jig.get_port_status()}
+        else:
+            return {"success": False, "error": "Port name is not correct or please close port"}
 
     return wrapper()
 
@@ -97,11 +99,10 @@ async def sat_dis() -> dict[str, bool | str]:
 
 
 @router_gl840.get("/connect")
-async def gl840_connect() -> dict[str, bool | str]:
+async def gl840_connect(accessPoint: str) -> dict[str, bool | str]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        address = bus_test.gl840_setting
-        bus_test.gl840.connect(address=address)
+        bus_test.gl840.connect(address=accessPoint)
         return {"success": True, "isOpen": bus_test.gl840.get_open_status()}
 
     return wrapper()
@@ -138,14 +139,16 @@ async def gl840_record_stop() -> dict[str, bool | str]:
 
 
 @router_sas.get("/connect")
-async def sas_connect() -> dict[str, bool | str]:
+async def sas_connect(accessPoint: str) -> dict[str, bool | str]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        port = bus_test.sas_setting.port
         baudrate = bus_test.sas_setting.baudrate
         parity = bus_test.sas_setting.parity
-        bus_test.sas.set_port(port=port, baudrate=baudrate, parity=parity)
-        return {"success": True, "isOpen": bus_test.sas.get_port_status()}
+        is_success = bus_test.sas.set_port(port=accessPoint.upper(), baudrate=baudrate, parity=parity)
+        if is_success:
+            return {"success": True, "isOpen": bus_test.sas.get_port_status()}
+        else:
+            return {"success": False, "error": "Port name is not correct or please close port"}
 
     return wrapper()
 

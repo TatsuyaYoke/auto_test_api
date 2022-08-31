@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import struct
 from typing import Optional, cast
 
@@ -11,6 +12,8 @@ from src.common.logger import set_logger
 
 LOGGER_IS_ACTIVE_STREAM = src.common.settings.logger_is_active_stream
 logger = set_logger(__name__, is_active_stream=LOGGER_IS_ACTIVE_STREAM)
+
+COM_PATTERN = r"COM([1-9]+)([0-9]?)"
 
 
 class SerialDriver:
@@ -28,19 +31,27 @@ class SerialDriver:
         timeout: float = 1,
         write_timeout: float = 1,
         txrx_size: int = 4096,
-    ) -> None:
-        if self.__ser is None or not self.__ser.is_open:
-            self.__ser = serial.Serial(
-                port=port,
-                baudrate=baudrate,
-                parity=parity,
-                bytesize=datasize,
-                stopbits=stopbits,
-                timeout=timeout,
-                writeTimeout=write_timeout,
-            )
-            if self.__ser is not None:
-                self.__ser.set_buffer_size(rx_size=txrx_size, tx_size=txrx_size)
+    ) -> bool:
+
+        regex_pattern = re.compile(COM_PATTERN)
+        if regex_pattern.fullmatch(port) is None:
+            return False
+
+        if self.__ser is not None and self.__ser.is_open:
+            return False
+        self.__ser = serial.Serial(
+            port=port,
+            baudrate=baudrate,
+            parity=parity,
+            bytesize=datasize,
+            stopbits=stopbits,
+            timeout=timeout,
+            writeTimeout=write_timeout,
+        )
+        if self.__ser is not None:
+            self.__ser.set_buffer_size(rx_size=txrx_size, tx_size=txrx_size)
+
+        return True
 
     def close_port(self) -> None:
         if self.__ser is not None:

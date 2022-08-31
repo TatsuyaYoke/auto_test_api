@@ -17,15 +17,13 @@ class FreqResponse(TypedDict):
 
 
 class SignalAnalyzer(VisaDriver):
-    def __init__(self, address: str, p_capture: Optional[Path] = None) -> None:
+    def __init__(self, p_capture: Path) -> None:
         super().__init__()
-        self.address = address
-        if p_capture is not None:
-            today_str = get_today_string()
-            self.p_capture = p_capture / today_str
+        today_str = get_today_string()
+        self.p_capture = p_capture / today_str
 
-    def connect(self) -> bool:
-        return self.set_resource(address=self.address, idn_pattern=SIGNAL_ANALYZER_IDN_PATTERN, read_termination="")
+    def connect(self, address: str) -> bool:
+        return self.set_resource(address=address, idn_pattern=SIGNAL_ANALYZER_IDN_PATTERN, read_termination="")
 
     def get_freq_start(self) -> Optional[float]:
         freq_start_str = self.query(data="freq:start?")
