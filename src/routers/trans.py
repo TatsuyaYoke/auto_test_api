@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import threading
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -24,6 +23,8 @@ class TransTest:
         self.trans_setting = settings.trans
         self.qdra_setting = settings.qdra.network
         self.qmr_setting = settings.qmr.network
+        self.is_on_qdra = False
+        self.is_on_qmr = False
 
         qdra_ssh_setting = settings.qdra.ssh
         self.qdra_ssh = QdraSsh(
@@ -129,75 +130,127 @@ async def make_dir(pathStr: str, project: str) -> dict[str, bool | str]:  # noqa
 async def connect_qdra(accessPoint: str) -> dict[str, bool]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool]:
-        return {"success": True, "isOpen": check_ping(ip_address=accessPoint)}
+        is_success = check_ping(ip_address=accessPoint)
+        if is_success:
+            trans_test.is_on_qdra = True
+        else:
+            trans_test.is_on_qdra = False
+        return {"success": True, "isOpen": trans_test.is_on_qdra}
 
     return wrapper()
 
 
 @router_qdra.get("/recordStart")
-async def qdra_record_start(session_name: str, duration: int) -> dict[str, bool]:
-    return {"success": trans_test.record_start(session_name=session_name, duration=duration)}
+async def qdra_record_start(sessionName: str, duration: int) -> dict[str, bool | str]:  # noqa
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qdra_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qdra:
+            return {"success": False, "error": "Not open: qDRA"}
+        return {"success": trans_test.record_start(session_name=sessionName, duration=duration)}
+
+    return wrapper()
 
 
 @router_qdra.get("/recordStop")
-async def qdra_record_stop() -> dict[str, bool]:
-    return {"success": trans_test.record_stop()}
+async def qdra_record_stop() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qdra_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qdra:
+            return {"success": False, "error": "Not open: qDRA"}
+        return {"success": trans_test.record_stop()}
+
+    return wrapper()
 
 
 @router_qdra.get("/checkExistence")
-async def qdra_check_existence(path_str: str) -> dict[str, bool | str]:
-    ip_address = trans_test.qdra_setting.ip_address
-    if not check_ping(ip_address):
-        return {"success": False, "error": "Not open: qDRA"}
-    exists = trans_test.qdra_ssh.exists(Path(path_str))
-    if exists:
-        return {"success": True}
-    else:
-        return {"success": False, "error": f"Not exist: {path_str}"}
+async def qdra_check_existence(pathStr: str) -> dict[str, bool | str]:  # noqa
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qdra_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qdra:
+            return {"success": False, "error": "Not open: qDRA"}
+        exists = trans_test.qdra_ssh.exists(Path(pathStr))
+        if exists:
+            return {"success": True}
+        else:
+            return {"success": False, "error": f"Not exist: {pathStr}"}
+
+    return wrapper()
 
 
 @router_qdra.get("/makeDir")
-async def qdra_make_dir(path_str: str) -> dict[str, bool | str]:
-    ip_address = trans_test.qdra_setting.ip_address
-    if not check_ping(ip_address):
-        return {"success": False, "error": "Not open: qDRA"}
-    return {"success": trans_test.qdra_ssh.mkdir(Path(path_str))}
+async def qdra_make_dir(pathStr: str) -> dict[str, bool | str]:  # noqa
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qdra_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qdra:
+            return {"success": False, "error": "Not open: qDRA"}
+        return {"success": trans_test.qdra_ssh.mkdir(Path(pathStr))}
+
+    return wrapper()
 
 
 @router_qmr.get("/connect")
 async def connect_qmr(accessPoint: str) -> dict[str, bool]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool]:
-        return {"success": True, "isOpen": check_ping(ip_address=accessPoint)}
+        is_success = check_ping(ip_address=accessPoint)
+        if is_success:
+            trans_test.is_on_qmr = True
+        else:
+            trans_test.is_on_qmr = False
+        return {"success": True, "isOpen": trans_test.is_on_qmr}
 
     return wrapper()
 
 
 @router_qmr.get("/8psk_2_3")
-async def qmr_change_modcod_8psk_2_3() -> dict[str, bool]:
-    return {"success": trans_test.change_modcod(modcod=13)}
+async def qmr_change_modcod_8psk_2_3() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qmr_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qmr:
+            return {"success": False, "error": "Not open: qMR"}
+        return {"success": trans_test.change_modcod(modcod=13)}
+
+    return wrapper()
 
 
 @router_qmr.get("/8psk_5_6")
-async def qmr_change_modcod_8psk_5_6() -> dict[str, bool]:
-    return {"success": trans_test.change_modcod(modcod=15)}
+async def qmr_change_modcod_8psk_5_6() -> dict[str, bool | str]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qmr_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qmr:
+            return {"success": False, "error": "Not open: qMR"}
+        return {"success": trans_test.change_modcod(modcod=15)}
+
+    return wrapper()
 
 
 @router_test.get("/processing")
-async def processing(session_name: str, path_str: str, p_script_str: str) -> dict[str, bool | str]:
-    ip_address = trans_test.qdra_setting.ip_address
-    if not check_ping(ip_address):
-        return {"success": False, "error": "Not open: qDRA"}
-    t = threading.Thread(target=trans_test.processing, args=[session_name, path_str, p_script_str])
-    t.start()
-    return {"success": True}
+async def processing(sessionName: str, pathStr: str, pathScriptStr: str) -> dict[str, bool | str]:  # noqa
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qdra_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qdra:
+            return {"success": False, "error": "Not open: qDRA"}
+        trans_test.processing(session_name=sessionName, path_str=pathStr, p_script_str=pathScriptStr)
+        return {"success": True}
+
+    return wrapper()
 
 
 @router_test.get("/getProcessingData")
-async def get_processing_data(session_name: str, path_str: str, delete_flag: bool = False) -> dict[str, bool | str]:
-    ip_address = trans_test.qdra_setting.ip_address
-    if not check_ping(ip_address):
-        return {"success": False, "error": "Not open: qDRA"}
-    t = threading.Thread(target=trans_test.get_processing_data, args=[session_name, path_str, delete_flag])
-    t.start()
-    return {"success": True}
+async def get_processing_data(sessionName: str, pathStr: str, deleteFlag: bool = False) -> dict[str, bool | str]:  # noqa
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qdra_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qdra:
+            return {"success": False, "error": "Not open: qDRA"}
+        trans_test.get_processing_data(session_name=sessionName, path_str=pathStr, delete_flag=deleteFlag)
+        return {"success": True}
+
+    return wrapper()
