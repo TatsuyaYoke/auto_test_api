@@ -72,7 +72,7 @@ async def bus_jig_disconnect() -> dict[str, bool]:
     return wrapper()
 
 
-@router_bus_jig.get("/sat_ena")
+@router_bus_jig.get("/satEna")
 async def sat_ena() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
@@ -85,7 +85,7 @@ async def sat_ena() -> dict[str, bool | str]:
     return wrapper()
 
 
-@router_bus_jig.get("/sat_dis")
+@router_bus_jig.get("/satDis")
 async def sat_dis() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
@@ -112,7 +112,7 @@ async def gl840_connect(accessPoint: str) -> dict[str, bool | str]:  # noqa
 async def gl840_disconnect() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        bus_test.gl840.close_resource()
+        bus_test.gl840.disconnect()
         return {"success": True, "isOpen": bus_test.gl840.get_open_status()}
 
     return wrapper()
@@ -122,6 +122,9 @@ async def gl840_disconnect() -> dict[str, bool | str]:
 async def gl840_record_start() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
+        is_open = bus_test.gl840.get_open_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: gl840"}
         bus_test.gl840.record_start()
         return {"success": True}
 
@@ -132,6 +135,9 @@ async def gl840_record_start() -> dict[str, bool | str]:
 async def gl840_record_stop() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
+        is_open = bus_test.gl840.get_open_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: gl840"}
         bus_test.gl840.record_stop()
         return {"success": True}
 
@@ -167,6 +173,9 @@ async def sas_disconnect() -> dict[str, bool | str]:
 async def sas_on(voc: float, isc: float, fill_factor: float) -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
+        is_open = bus_test.sas.get_connection_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: SAS"}
         setting = SasOutputSetting(voc=voc, isc=isc, fill_factor=fill_factor)
         bus_test.sas.output(onoff="on", setting=setting)
         return {"success": bus_test.sas.get_output_status()}
@@ -178,6 +187,9 @@ async def sas_on(voc: float, isc: float, fill_factor: float) -> dict[str, bool |
 async def sas_off() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
+        is_open = bus_test.sas.get_connection_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: SAS"}
         bus_test.sas.output("off")
         return {"success": not bus_test.sas.get_output_status()}
 
@@ -188,6 +200,9 @@ async def sas_off() -> dict[str, bool | str]:
 async def sas_repeat_on(voc: float, isc: float, fill_factor: float, orbit_period: int, sun_rate: float, offset: int) -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
+        is_open = bus_test.sas.get_connection_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: SAS"}
         output_setting = SasOutputSetting(voc=voc, isc=isc, fill_factor=fill_factor)
         repeat_setting = SasRepeatSetting(orbit_period=orbit_period, sun_rate=sun_rate, offset=offset, interval=1)
         bus_test.sas.repeat_on(output_setting=output_setting, repeat_setting=repeat_setting)
@@ -200,6 +215,9 @@ async def sas_repeat_on(voc: float, isc: float, fill_factor: float, orbit_period
 async def sas_repeat_off() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
+        is_open = bus_test.sas.get_connection_status()
+        if not is_open:
+            return {"success": False, "error": "Not open: SAS"}
         bus_test.sas.repeat_off()
         return {"success": bus_test.sas.get_repeat_status()}
 

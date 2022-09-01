@@ -126,11 +126,10 @@ async def make_dir(pathStr: str, project: str) -> dict[str, bool | str]:  # noqa
 
 
 @router_qdra.get("/connect")
-async def connect_qdra() -> dict[str, bool]:
+async def connect_qdra(accessPoint: str) -> dict[str, bool]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool]:
-        ip_address = trans_test.qdra_setting.ip_address
-        return {"success": True, "isOpen": check_ping(ip_address)}
+        return {"success": True, "isOpen": check_ping(ip_address=accessPoint)}
 
     return wrapper()
 
@@ -166,11 +165,10 @@ async def qdra_make_dir(path_str: str) -> dict[str, bool | str]:
 
 
 @router_qmr.get("/connect")
-async def connect_qmr() -> dict[str, bool]:
+async def connect_qmr(accessPoint: str) -> dict[str, bool]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool]:
-        ip_address = trans_test.qmr_setting.ip_address
-        return {"success": True, "isOpen": check_ping(ip_address)}
+        return {"success": True, "isOpen": check_ping(ip_address=accessPoint)}
 
     return wrapper()
 
