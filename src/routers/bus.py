@@ -183,19 +183,6 @@ async def sas_on(voc: float, isc: float, fill_factor: float) -> dict[str, bool |
     return wrapper()
 
 
-@router_sas.get("/off")
-async def sas_off() -> dict[str, bool | str]:
-    @exception(logger=logger)
-    def wrapper() -> dict[str, bool | str]:
-        is_open = bus_test.sas.get_connection_status()
-        if not is_open:
-            return {"success": False, "error": "Not open: SAS"}
-        bus_test.sas.output("off")
-        return {"success": not bus_test.sas.get_output_status()}
-
-    return wrapper()
-
-
 @router_sas.get("/repeatOn")
 async def sas_repeat_on(voc: float, isc: float, fill_factor: float, orbit_period: int, sun_rate: float, offset: int) -> dict[str, bool | str]:
     @exception(logger=logger)
@@ -211,7 +198,7 @@ async def sas_repeat_on(voc: float, isc: float, fill_factor: float, orbit_period
     return wrapper()
 
 
-@router_sas.get("/repeatOff")
+@router_sas.get("/off")
 async def sas_repeat_off() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
