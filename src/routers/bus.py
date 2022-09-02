@@ -199,7 +199,7 @@ async def sas_repeat_on(voc: float, isc: float, fill_factor: float, orbit_period
 
 
 @router_sas.get("/off")
-async def sas_repeat_off() -> dict[str, bool | str]:
+async def sas_off() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
         is_open = bus_test.sas.get_connection_status()
