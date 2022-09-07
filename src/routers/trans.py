@@ -71,15 +71,19 @@ class TransTest:
         else:
             return False
 
-    def processing(self, session_name: str, path_str: str, p_script_str: str) -> None:
+    def processing(self, session_name: str, path_str: str, p_script_str: str) -> tuple[str, str]:
         self.set_busy()
-        self.qdra_ssh.exec_sh(session_name=session_name, path=Path(path_str), p_script=Path(p_script_str))
+        stdout, stderr = self.qdra_ssh.exec_sh(session_name=session_name, path=Path(path_str), p_script=Path(p_script_str))
         self.set_not_busy()
+        return stdout, stderr
 
-    def get_processing_data(self, session_name: str, path_str: str, delete_flag: bool = False) -> None:
+    def get_processing_data(self, session_name: str, path_str: str, delete_flag: bool = False) -> bool:
         self.set_busy()
         path = Path(path_str)
         p_from = path / session_name
+        exists = self.qdra_ssh.exists(Path(p_from))
+        if not exists:
+            return False
         file_list = self.qdra_ssh.get_list_dir(path=p_from)
 
         if self.p_save is not None:
@@ -92,6 +96,7 @@ class TransTest:
             self.qdra_ssh.delete_dir(p_from)
 
         self.set_not_busy()
+        return True
 
 
 settings = read_json_file()
@@ -237,8 +242,8 @@ async def processing(sessionName: str, pathStr: str, pathScriptStr: str) -> dict
         ip_address = trans_test.qdra_setting.ip_address
         if not check_ping(ip_address) or not trans_test.is_on_qdra:
             return {"success": False, "error": "Not open: qDRA"}
-        trans_test.processing(session_name=sessionName, path_str=pathStr, p_script_str=pathScriptStr)
-        return {"success": True}
+        stdout, stderr = trans_test.processing(session_name=sessionName, path_str=pathStr, p_script_str=pathScriptStr)
+        return {"success": True, "stdout": stdout, "stderr": stderr}
 
     return wrapper()
 
@@ -250,7 +255,10 @@ async def get_processing_data(sessionName: str, pathStr: str, deleteFlag: bool =
         ip_address = trans_test.qdra_setting.ip_address
         if not check_ping(ip_address) or not trans_test.is_on_qdra:
             return {"success": False, "error": "Not open: qDRA"}
-        trans_test.get_processing_data(session_name=sessionName, path_str=pathStr, delete_flag=deleteFlag)
-        return {"success": True}
+        exists = trans_test.get_processing_data(session_name=sessionName, path_str=pathStr, delete_flag=deleteFlag)
+        if exists:
+            return {"success": True}
+        else:
+            return {"success": False, "error": "Processing data not exist"}
 
     return wrapper()

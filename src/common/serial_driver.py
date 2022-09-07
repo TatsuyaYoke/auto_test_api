@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import struct
-from typing import Optional, cast
+from typing import Optional
 
 import serial
 from serial.serialutil import SerialTimeoutException
@@ -125,7 +125,7 @@ class SerialDriver:
                         break
 
                 self.__is_connection_error = False
-                return cast(bytes, self.__ser.read(self.__ser.in_waiting)).decode()
+                return self.__ser.read(self.__ser.in_waiting).decode()
 
             except SerialTimeoutException:
                 self.__is_connection_error = True

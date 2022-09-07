@@ -170,30 +170,30 @@ async def sas_disconnect() -> dict[str, bool | str]:
 
 
 @router_sas.get("/on")
-async def sas_on(voc: float, isc: float, fill_factor: float) -> dict[str, bool | str]:
+async def sas_on(voc: float, isc: float, fillFactor: float) -> dict[str, bool | str]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        is_open = bus_test.sas.get_connection_status()
+        is_open = bus_test.sas.get_port_status()
         if not is_open:
             return {"success": False, "error": "Not open: SAS"}
-        setting = SasOutputSetting(voc=voc, isc=isc, fill_factor=fill_factor)
+        setting = SasOutputSetting(voc=voc, isc=isc, fill_factor=fillFactor)
         bus_test.sas.output(onoff="on", setting=setting)
-        return {"success": bus_test.sas.get_output_status()}
+        return {"success": True, "isOn": bus_test.sas.get_output_status()}
 
     return wrapper()
 
 
 @router_sas.get("/repeatOn")
-async def sas_repeat_on(voc: float, isc: float, fill_factor: float, orbit_period: int, sun_rate: float, offset: int) -> dict[str, bool | str]:
+async def sas_repeat_on(voc: float, isc: float, fillFactor: float, orbitPeriod: int, sunRate: float, offset: int) -> dict[str, bool | str]:  # noqa
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        is_open = bus_test.sas.get_connection_status()
+        is_open = bus_test.sas.get_port_status()
         if not is_open:
             return {"success": False, "error": "Not open: SAS"}
-        output_setting = SasOutputSetting(voc=voc, isc=isc, fill_factor=fill_factor)
-        repeat_setting = SasRepeatSetting(orbit_period=orbit_period, sun_rate=sun_rate, offset=offset, interval=1)
+        output_setting = SasOutputSetting(voc=voc, isc=isc, fill_factor=fillFactor)
+        repeat_setting = SasRepeatSetting(orbit_period=orbitPeriod, sun_rate=sunRate, offset=offset, interval=1)
         bus_test.sas.repeat_on(output_setting=output_setting, repeat_setting=repeat_setting)
-        return {"success": bus_test.sas.get_repeat_status()}
+        return {"success": True, "isOn": bus_test.sas.get_repeat_status()}
 
     return wrapper()
 
@@ -202,10 +202,10 @@ async def sas_repeat_on(voc: float, isc: float, fill_factor: float, orbit_period
 async def sas_off() -> dict[str, bool | str]:
     @exception(logger=logger)
     def wrapper() -> dict[str, bool | str]:
-        is_open = bus_test.sas.get_connection_status()
+        is_open = bus_test.sas.get_port_status()
         if not is_open:
             return {"success": False, "error": "Not open: SAS"}
         bus_test.sas.repeat_off()
-        return {"success": bus_test.sas.get_repeat_status()}
+        return {"success": True, "isOn": bus_test.sas.get_repeat_status()}
 
     return wrapper()

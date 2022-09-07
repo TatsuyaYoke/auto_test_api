@@ -57,7 +57,7 @@ class QdraSsh:
             sftp = ssh.open_sftp()
             sftp.get(str(p_server).replace("\\", "/"), str(p_save))
 
-    def exec_sh(self, session_name: str, path: Path, p_script: Path) -> tuple[list[str], list[str]]:
+    def exec_sh(self, session_name: str, path: Path, p_script: Path) -> tuple[str, str]:
 
         stdout_list: list[str] = []
         stderr_list: list[str] = []
@@ -74,7 +74,7 @@ class QdraSsh:
             stdout_list.extend(stdout)
             stderr_list.extend(stderr)
 
-        return stdout_list, stderr_list
+        return "".join(stdout_list), "".join(stderr_list)
 
     def delete_dir(self, path: Path) -> tuple[list[str], list[str]]:
 
