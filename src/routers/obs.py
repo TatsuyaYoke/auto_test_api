@@ -26,6 +26,7 @@ class ObsTest:
         self.p_save = resolve_path_shared_drives(Path(settings.common.default_path))
 
         self.power_sensor = PowerSensor()
+        self.power_log: Optional[float] = None
         self.power_sensor_data: Optional[dict[str, list[float]]] = None
 
         p_capture = Path(settings.signal_analyzer.capture_path)
@@ -52,6 +53,7 @@ class ObsTest:
                 sleep(interval)
                 elapsed_time = perf_counter() - time_start
                 data = self.power_sensor.get_data()
+                self.power_log = data
                 if data is not None:
                     time_list.append(elapsed_time)
                     power_list.append(data)
@@ -176,6 +178,18 @@ async def get_data_power_sensor() -> dict[str, bool | str | float]:
     return wrapper()
 
 
+@router_power_sensor.get("/getDataLog")
+async def get_data_power_sensor_log() -> dict[str, bool | str | float]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str | float]:
+        data = obs_test.power_log
+        if data is None:
+            return {"success": False, "error": "Data none"}
+        return {"success": True, "data": data}
+
+    return wrapper()
+
+
 @router_signal_analyzer.get("/connect")
 async def connect_signal_analyzer(accessPoint: str) -> dict[str, bool]:  # noqa
     @exception(logger=logger)
@@ -264,11 +278,21 @@ async def get_chirp_waveform(testName: str, obsDuration: int, warmUpDuration: in
         if not obs_test.p_save.exists():
             return {"success": False, "error": "Not exist: dir"}
 
-        data = obs_test.get_obs_data(testName, obsDuration, warmUpDuration, holdDuration)
-        if data is not None:
-            return {"success": True, "data": data}
-        else:
-            return {"success": False, "error": "Data is none"}
+        t = threading.Thread(target=obs_test.get_obs_data, args=(testName, obsDuration, warmUpDuration, holdDuration))
+        t.start()
+        return {"success": True}
+
+    return wrapper()
+
+
+@router_test.get("/getObsPowerSensorData")
+async def get_obs_power_sensor_data() -> dict[str, bool | str | dict[str, list[float]]]:
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str | dict[str, list[float]]]:
+        data = obs_test.power_sensor_data
+        if data is None:
+            return {"success": False, "error": "Data none"}
+        return {"success": True, "data": data}
 
     return wrapper()
 
