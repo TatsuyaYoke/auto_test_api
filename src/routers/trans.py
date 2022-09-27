@@ -98,6 +98,20 @@ class TransTest:
         self.set_not_busy()
         return True
 
+    def screenshot(self, session_name: str) -> bool:
+        self.set_busy()
+        path = Path(f"Pictures/{session_name}.png")
+        self.qdra_ssh.screenshot(path)
+        exists = self.qdra_ssh.exists(path)
+
+        if self.p_save is not None:
+            p_to = self.p_save / session_name
+            if not p_to.exists():
+                p_to.mkdir(parents=True)
+            self.qdra_ssh.get_file(p_server=path, p_save=p_to / f"{session_name}.png")
+        self.set_not_busy()
+        return exists
+
 
 settings = read_json_file()
 if settings is not None:
@@ -260,5 +274,21 @@ async def get_processing_data(sessionName: str, pathStr: str, deleteFlag: bool =
             return {"success": True}
         else:
             return {"success": False, "error": "Processing data not exist"}
+
+    return wrapper()
+
+
+@router_test.get("/screenshot")
+async def screenshot(sessionName: str) -> dict[str, bool | str]:  # noqa
+    @exception(logger=logger)
+    def wrapper() -> dict[str, bool | str]:
+        ip_address = trans_test.qdra_setting.ip_address
+        if not check_ping(ip_address) or not trans_test.is_on_qdra:
+            return {"success": False, "error": "Not open: qDRA"}
+        exists = trans_test.screenshot(sessionName)
+        if exists:
+            return {"success": True}
+        else:
+            return {"success": False, "error": "Cannot screenshot"}
 
     return wrapper()

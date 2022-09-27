@@ -143,3 +143,33 @@ class QdraSsh:
                     sftp.mkdir(str(p).replace("\\", "/"))
 
         return self.exists(path)
+
+    def screenshot(self, path: Path) -> tuple[list[str], list[str]]:
+
+        stdout_list: list[str] = []
+        stderr_list: list[str] = []
+        with paramiko.SSHClient() as ssh:
+            # Are you sure you want to continue connecting (yes/no)? -> Yes
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.host, self.port, self.username, self.password)
+            path_str = str(path).replace("\\", "/")
+
+            _, stdout, _ = ssh.exec_command("ps -C firefox")
+            exists_firefox = False
+            for out in list(stdout):
+                if "firefox" in out:
+                    exists_firefox = True
+
+            if not exists_firefox:
+                script_start_browser = 'nohup firefox 192.168.12.4/#/home"("slideout:system-tree")" localhost:8081/#/home &'
+            else:
+                script_start_browser = ""
+
+            stdin, stdout, stderr = ssh.exec_command(f"export DISPLAY=:0 ; {script_start_browser} sleep 5 ; gnome-screenshot -f ~/{path_str}", get_pty=True)
+            stdin.write(f"{self.password}\n")
+            stdin.flush()
+
+            stdout_list.extend(stdout)
+            stderr_list.extend(stderr)
+
+        return stdout_list, stderr_list
