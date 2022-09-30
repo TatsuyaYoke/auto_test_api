@@ -4,6 +4,7 @@ logs/
 csv/
 capture/
 old/
+.vscode/
 
 
 # Byte-compiled / optimized / DLL files
